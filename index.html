@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maps Application</title>
+    <!-- leaflet marked 1.8.0 -->
+    <!-- <link rel="stylesheet" href="./libs/css/leaflet_1.8.0_leaflet.css" /> -->
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <!-- <link rel="stylesheet" href="./libs/css/leaflet@1.9.4_dist_leaflet.css" /> -->
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+
+    <!-- toastify 1.6.1 -->
+    <link rel="stylesheet" href="./libs/css/toastify-js_1.6.1_toastify.min.css" />
+    <!-- leaflet markercluster default 1.5.3 -->
+    <link
+      rel="stylesheet"
+      href="./libs/css/leaflet_markercluster_1.5.3_MarkerCluster_Default.min.css"
+    />
+    <!-- leaflet markercluster 1.5.3 -->
+    <link rel="stylesheet" href="./libs/css/leaflet.markercluster_1.5.3_MarkerCluster.min.css" />
+    <!-- leaflet extra markers_1.2.1 -->
+    <link
+      rel="stylesheet"
+      href="./libs/css/leaflet-extra-markers_1.2.1_css_leaflet.extra-markers.min.css"
+    />
+    <!-- font awesome 6.2.1 using cdn as instructed-->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+    />
+    <!-- bootstrap 5.2.3 -->
+    <link rel="stylesheet" href="./libs/css/bootstrap_5.2.3_css_bootstrap.min.css" />
+    <!-- Leaflet EasyButton 2.4.0 -->
+    <link rel="stylesheet" href="./libs/css/Leaflet.EasyButton_2.4.0_easy-button.min.css" />
+    <!-- styles.css -->
+    <link rel="stylesheet" href="./libs/css/styles.css" />
+  </head>
+  <body>
+    <span id="selectContainer">
+      <select id="countrySelect" class="form-select shadow-sm">
+        <!-- populate from PHP call that returns only the codes and names from the countryborder GeoJSON file -->
+      </select>
+    </span>
+
+    <div id="map"></div>
+
+    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Overview</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-plane fa-xl text-success"></i>
+                </td>
+
+                <td>Airports</td>
+
+                <td class="text-end">
+                  <input type="checkbox" id="capitalCityCheckbox" value="airport" />
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-street-view fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">
+                  <input type="checkbox" id="attribute2Checkbox" />
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-heart fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">
+                  <input type="checkbox" id="attribute3Checkbox" />
+                </td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-car fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">
+                  <input type="checkbox" id="attribute4Checkbox" />
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Overview</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-striped">
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-globe fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td id="capitalCity" class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-street-view fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-heart fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">value</td>
+              </tr>
+              <tr>
+                <td class="text-center">
+                  <i class="fa-solid fa-car fa-xl text-success"></i>
+                </td>
+
+                <td>Attribute</td>
+
+                <td class="text-end">value</td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <!-- <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script> -->
+
+    <!-- <script type="application/javascript" src="./libs/js/leaflet@1.9.4_dist_leaflet.js"></script> -->
+
+    <!-- leaflet 1.8.0 -->
+    <script type="application/javascript" src="./libs/js/leaflet_1.8.0_leaflet.js"></script>
+    <!-- jquery 3.6.2 -->
+    <script type="application/javascript" src="./libs/js/jquery_3.6.2_jquery.min.js"></script>
+    <!-- toastify 1.6.1 -->
+    <script
+      type="application/javascript"
+      src="./libs/js/toastify-js_1.6.1_toastify.min.js"
+    ></script>
+    <!-- markercluster 1.5.3 -->
+    <script
+      type="application/javascript"
+      src="./libs/js/markercluster_1.5.3_leaflet.markercluster.js"
+    ></script>
+    <!-- leaflet extra markers 1.2.1 -->
+    <script
+      type="application/javascript"
+      src="./libs/js/leaflet-extra-markers_1.2.1_js_leaflet.extra-markers.js"
+    ></script>
+    <!-- bootstrap 5.2.3 -->
+    <script
+      type="application/javascript"
+      src="./libs/js/bootstrap_5.2.3_js_bootstrap.min.js"
+    ></script>
+    <!-- leaflet easy button 2.4.0 -->
+    <script
+      type="application/javascript"
+      src="./libs/js/Leaflet.EasyButton_2.4.0_easy-button.min.js"
+    ></script>
+    <!-- scripy.js -->
+    <script type="application/javascript" src="./libs/js/script.js"></script>
+    <script type="application/javascript" src="./libs/js/countryBorders.js"></script>
+    <script type="application/javascript" src="./libs/js/states.js"></script>
+  </body>
+</html>

@@ -58,7 +58,7 @@ function displayMapAndControls(lat, lng, zoom) {
       if (customLabel) {
         var marker = L.marker(e.latlng)
           .addTo(map)
-          .bindPopup(customLabel + " right click to remove");
+          .bindPopup(customLabel + " right click to remove it wokrd");
         markers.push(marker);
       }
     }

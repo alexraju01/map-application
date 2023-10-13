@@ -58,7 +58,7 @@ function displayMapAndControls(lat, lng, zoom) {
       if (customLabel) {
         var marker = L.marker(e.latlng)
           .addTo(map)
-          .bindPopup(customLabel + " right click to remove akjfhkgfejkefuiwebfliuewgfi");
+          .bindPopup(customLabel + " right click to remove");
         markers.push(marker);
       }
     }

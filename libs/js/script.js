@@ -38,10 +38,10 @@ function displayMapAndControls(lat, lng, zoom) {
     isVisible = !isVisible; // Toggle the marker's visibility state(true to false)
   }).addTo(map);
 
-  var markers = []; // Array to store markers
+  let markers = []; // Array to store markers
   // Function to check if the location exists in the markers array
   function locationExists(latlng) {
-    return markers.some(function (marker) {
+    return markers.some((marker) => {
       return marker.getLatLng().equals(latlng);
     });
   }
@@ -76,25 +76,18 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-info fa-lg", function (btn, map) {
     $("#exampleModal").modal("show");
   }).addTo(map);
-
-  // var AirportMarkers = L.markerClusterGroup();
-  // var marker = L.geoJSON()
-  // var airports = [
-  //   // Sample airport data (replace with your data)
-  //   { name: "Airport 1", lat: 40.7128, lon: -74.006 }, // Example coordinates for New York City
-  //   { name: "Airport 2", lat: 34.0522, lon: -118.2437 }, // Example coordinates for Los Angeles
-  //   // Add more airport data entries here
-  // ];
-  function airportMarkers() {}
 }
 
-var selectedCountryLayer; // Declare a variable to keep track of the selected country layer
+let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
+let airports = [];
+let airportMarkerCluster; // Declare a variable to store the airport marker cluster
+let selectedCountry;
 
 function selectCountryDropDown() {
   document.getElementById("countrySelect").addEventListener("change", function () {
-    var selectedCountry = this.value; // Get the selected country
+    let selectedCountry = this.value; // Get the selected country
     // Find the GeoJSON data based on the selected country
-    var filteredCountry = country.features.find(function (feature) {
+    var filteredCountry = country.features.find((feature) => {
       return feature.properties.iso_a2 === selectedCountry;
     });
 
@@ -108,6 +101,14 @@ function selectCountryDropDown() {
 
     // Zoom out to the bounds of the selected country
     map.fitBounds(selectedCountryLayer.getBounds());
+
+    // Check if the checkbox is checked, and if it is, load airport markers
+    if ($("#capitalCityCheckbox").is(":checked")) {
+      updateAirportMarkers(selectedCountry);
+    } else {
+      // If the checkbox is unchecked, remove the airport markers
+      clearAirportMarkers();
+    }
   });
 }
 
@@ -132,24 +133,6 @@ function populateCountryDropdown() {
   });
 }
 
-// function populateCountryDropdown() {
-//   // Extract country names from the 'country' object
-//   const countryNames = country.features.map((feature) => feature.properties.name);
-//   // Sort the country names alphabetically
-//   countryNames.sort();
-//   // Get a reference to the dropdown element
-//   const dropdown = document.getElementById("countrySelect");
-//   // Loop through the sorted country names and create options
-//   countryNames.forEach((countryName, iso_a3) => {
-//     console.log(countryName);
-//     console.log(iso_a3);
-//     const option = document.createElement("option");
-//     option.value = countryName;
-//     option.textContent = countryName;
-//     dropdown.appendChild(option);
-//   });
-// }
-
 // // Function to handle geolocation
 function getLocation() {
   if ("geolocation" in navigator) {
@@ -171,85 +154,79 @@ function getLocation() {
 }
 
 // $(document).ready(function () {
-var airports = [];
+// var airports = [];
+function updateAirportMarkers(selectedCountry) {
+  // Clear existing airport markers on the map, if any
+  clearAirportMarkers();
+  $.ajax({
+    url: "libs/php/getCountries.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      // sends data about the two data parameter(country and language)
+      // the value of these data parmeter is determened by the value from
+      // the element id
+      airport: $("#capitalCityCheckbox").val(),
+      country: selectedCountry,
+    },
+    success: function (result) {
+      if (airportMarkerCluster) {
+        airportMarkerCluster.clearLayers();
+        // map.removeLayer(airportMarkerCluster);
+      }
+      // console.log(JSON.stringify(result));
+      $.each(result.data, function (index, airport) {
+        console.log("hello");
+        let airportName = airport["asciiName"];
+        let airportLat = airport["lat"];
+        let airportLng = airport["lng"];
 
+        // Add the airport data to the 'airports' dictionary with 'airportName' as the key
+        airports.push({
+          name: airportName,
+          lat: airportLat,
+          lng: airportLng,
+        });
+      });
+      console.log(airports);
+      // Create an array to store the airport markers
+      // Create markers for each airport and add them to the markers array
+      var markers = airports.map(function (airport) {
+        var marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
+        return marker;
+      });
+
+      // Create a marker cluster group for the airport markers
+      airportMarkerCluster = L.markerClusterGroup();
+      airportMarkerCluster.addLayers(markers);
+
+      // Add the airportMarkercluster to the map
+      map.addLayer(airportMarkerCluster);
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
+function clearAirportMarkers() {
+  console.log("should clear");
+  if (airportMarkerCluster) {
+    airportMarkerCluster.clearLayers();
+    // map.removeLayer(airportMarkerCluster);
+  }
+}
 $("#capitalCityCheckbox").change(function () {
   if ($(this).is(":checked")) {
-    console.log("Checkbox has been checked!");
-    $.ajax({
-      url: "libs/php/getCountries.php", //  HTTP request is sent to this location
-      type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-      dataType: "json",
-      data: {
-        // sends data about the two data parameter(country and language)
-        // the value of these data parmeter is determened by the value from
-        // the element id
-        airport: $("#capitalCityCheckbox").val(),
-      },
-      success: function (result) {
-        // console.log(JSON.stringify(result));
-        $.each(result.data, function (index, airport) {
-          console.log("hello");
-          let airportName = airport["asciiName"];
-          let airportLat = airport["lat"];
-          let airportLng = airport["lng"];
-
-          // Add the airport data to the 'airports' dictionary with 'airportName' as the key
-          airports.push({
-            name: airportName,
-            lat: airportLat,
-            lng: airportLng,
-          });
-
-          // var markers = []; // Create an array to store the airport markers
-          // // Create markers for each airport and add them to the markers array
-          // airports.forEach(function (airports) {
-          //   var marker = L.marker([airports.lat, airports.lng]).bindPopup(airports.name); // Display the airport name when clicked
-          //   markers.push(marker);
-          // });
-          // // Create a marker cluster group
-          // var markerCluster = L.markerClusterGroup();
-          // // Add the airport markers to the cluster group
-          // markerCluster.addLayers(markers);
-          // // Add the marker cluster group to the map
-          // map.addLayer(markerCluster);
-
-          // console.log(airportName, airportLat, airportLng);
-        });
-        console.log(airports);
-        var markers = []; // Create an array to store the airport markers
-
-        // Create markers for each airport and add them to the markers array
-        airports.forEach(function (airport) {
-          var marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name); // Display the airport name when clicked
-          markers.push(marker);
-        });
-
-        // Create a marker cluster group
-        var markerCluster = L.markerClusterGroup();
-
-        // Add the airport markers to the cluster group
-        markerCluster.addLayers(markers);
-
-        // Add the marker cluster group to the map
-        map.addLayer(markerCluster);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // your error code
-        console.log("fail");
-        console.log(textStatus);
-        console.log(errorThrown);
-      },
-    });
+    var selectedCountry = $("#countrySelect").val();
+    updateAirportMarkers(selectedCountry);
+  } else {
+    clearAirportMarkers();
+    airports.length = 0;
   }
-});
-// });
-
-$("#capitalCityCheckbox").click(function () {
-  // $(this).prop("checked", true);
-  // ajax is a asynchronous javascript and xml fuction that
-  // request to a server(countryInfoApi.php) to fetch data
-  // in our case the php file.
 });
 
 window.onload = function () {

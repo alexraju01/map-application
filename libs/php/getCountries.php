@@ -9,7 +9,7 @@ $executionStartTime = microtime(true);
 // $countryCode = $_REQUEST['countryCode'];
     
 // $api = 'http://api.geonames.org/neighboursJSON?formatted=true&country=' . $_REQUEST['country'] . '&username=alexraju&style=full';
-$api = 'http://api.geonames.org/searchJSON?formatted=true&q=' . $_REQUEST['airport'] . '&country=uk&maxRows=10&lang=en&username=alexraju&style=full';
+$api = 'http://api.geonames.org/searchJSON?formatted=true&q=' . $_REQUEST['airport'] . '&country='. $_REQUEST['country'] . '&maxRows=20&lang=en&username=alexraju&style=full';
 
 
 // Initialize a CURL session and set options to make the HTTP request

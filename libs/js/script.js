@@ -76,6 +76,16 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-info fa-lg", function (btn, map) {
     $("#exampleModal").modal("show");
   }).addTo(map);
+
+  // var AirportMarkers = L.markerClusterGroup();
+  // var marker = L.geoJSON()
+  // var airports = [
+  //   // Sample airport data (replace with your data)
+  //   { name: "Airport 1", lat: 40.7128, lon: -74.006 }, // Example coordinates for New York City
+  //   { name: "Airport 2", lat: 34.0522, lon: -118.2437 }, // Example coordinates for Los Angeles
+  //   // Add more airport data entries here
+  // ];
+  function airportMarkers() {}
 }
 
 var selectedCountryLayer; // Declare a variable to keep track of the selected country layer
@@ -161,6 +171,8 @@ function getLocation() {
 }
 
 // $(document).ready(function () {
+var airports = [];
+
 $("#capitalCityCheckbox").change(function () {
   if ($(this).is(":checked")) {
     console.log("Checkbox has been checked!");
@@ -177,11 +189,50 @@ $("#capitalCityCheckbox").change(function () {
       success: function (result) {
         // console.log(JSON.stringify(result));
         $.each(result.data, function (index, airport) {
+          console.log("hello");
           let airportName = airport["asciiName"];
           let airportLat = airport["lat"];
           let airportLng = airport["lng"];
-          console.log(airportName, airportLat, airportLng);
+
+          // Add the airport data to the 'airports' dictionary with 'airportName' as the key
+          airports.push({
+            name: airportName,
+            lat: airportLat,
+            lng: airportLng,
+          });
+
+          // var markers = []; // Create an array to store the airport markers
+          // // Create markers for each airport and add them to the markers array
+          // airports.forEach(function (airports) {
+          //   var marker = L.marker([airports.lat, airports.lng]).bindPopup(airports.name); // Display the airport name when clicked
+          //   markers.push(marker);
+          // });
+          // // Create a marker cluster group
+          // var markerCluster = L.markerClusterGroup();
+          // // Add the airport markers to the cluster group
+          // markerCluster.addLayers(markers);
+          // // Add the marker cluster group to the map
+          // map.addLayer(markerCluster);
+
+          // console.log(airportName, airportLat, airportLng);
         });
+        console.log(airports);
+        var markers = []; // Create an array to store the airport markers
+
+        // Create markers for each airport and add them to the markers array
+        airports.forEach(function (airport) {
+          var marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name); // Display the airport name when clicked
+          markers.push(marker);
+        });
+
+        // Create a marker cluster group
+        var markerCluster = L.markerClusterGroup();
+
+        // Add the airport markers to the cluster group
+        markerCluster.addLayers(markers);
+
+        // Add the marker cluster group to the map
+        map.addLayer(markerCluster);
       },
       error: function (jqXHR, textStatus, errorThrown) {
         // your error code

@@ -254,9 +254,10 @@ function updateAirportMarkers(selectedCountry) {
 function clearAirportMarkers() {
   console.log("should clear");
   if (airportMarkerCluster) {
+    // clears the airport marker cluster layer
     airportMarkerCluster.clearLayers();
+    //This emptys the string.
     airports.length = 0;
-
     // map.removeLayer(airportMarkerCluster);
   }
 }

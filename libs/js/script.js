@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-console.log("hell0");
+console.log("hello");
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -19,7 +19,10 @@ let basemaps = {
 
 let map;
 let isVisible = true;
-let marker;
+// This is used to store user current location
+let userMarker;
+// Array to store all the markerr #NOTE# (markers and marker) are 2 different variables
+let markers = [];
 
 function displayMapAndControls(lat, lng, zoom) {
   map = L.map("map", {
@@ -28,27 +31,30 @@ function displayMapAndControls(lat, lng, zoom) {
   let layerControl = L.control.layers(basemaps).addTo(map);
 
   // adding easy button
-  L.easyButton("fa-crosshairs fa-lg", function (btn, map) {
+  L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
     if (isVisible) {
-      marker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
+      // storing the variable with user location using predefined
+      userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
       map.setView([lat, lng], 14);
     } else {
       // Remove the marker from the map
-      map.removeLayer(marker);
+      map.removeLayer(userMarker);
     }
     isVisible = !isVisible; // Toggle the marker's visibility state(true to false)
   }).addTo(map);
 
-  let markers = []; // Array to store markers
   // Function to check if the location exists in the markers array
   function locationExists(latlng) {
+    // array.some checks the first instance of this element that matches the marker
     return markers.some((marker) => {
+      // this returns the lat and lng value of the marker and checks if it equals to value of latlng
       return marker.getLatLng().equals(latlng);
     });
   }
 
   // Function to handle left-click
-  map.on("click", function (e) {
+  map.on("click", (e) => {
+    //  0 = left mouse button
     if (e.originalEvent.button === 0) {
       // Left-click: Check if a marker already exists at the clicked location
       if (locationExists(e.latlng)) {
@@ -57,7 +63,7 @@ function displayMapAndControls(lat, lng, zoom) {
       // Create a new marker and add it to the map and the markers array
       var customLabel = prompt("Enter a label for the marker:");
       if (customLabel) {
-        var marker = L.marker(e.latlng)
+        let marker = L.marker(e.latlng)
           .addTo(map)
           .bindPopup(customLabel + " Right click to remove");
         markers.push(marker);
@@ -66,10 +72,11 @@ function displayMapAndControls(lat, lng, zoom) {
   });
 
   // Function to handle right-click
-  map.on("contextmenu", function (e) {
+  // ###### NEED TO KNOW WHAT "CONTEXTMENU" ######
+  map.on("contextmenu", (e) => {
     // Right-click: Remove the last marker from the map and the markers array
     if (markers.length > 0) {
-      var lastMarker = markers.pop();
+      let lastMarker = markers.pop();
       map.removeLayer(lastMarker);
     }
   });
@@ -88,6 +95,7 @@ document.getElementById("countrySelect").addEventListener("change", function () 
   selectCountryDropDown();
 });
 
+// Ignore this function for now not main functionailty
 function getUserCountry() {
   // if ("geolocation" in navigator) {
   //   navigator.geolocation.getCurrentPosition(
@@ -123,11 +131,11 @@ function getUserCountry() {
 
 function selectCountryDropDown() {
   // getUserCountry();
-  defaultCountryOption = document.getElementById("countrySelect");
-  let selectedCountry = defaultCountryOption.value; // Get the selected country
+  countryOption = document.getElementById("countrySelect");
+  let selectedCountry = countryOption.value; // Get the selected country
   console.log(selectedCountry);
   // Find the GeoJSON data based on the selected country
-  var filteredCountry = country.features.find((feature) => {
+  let filteredCountry = country.features.find((feature) => {
     return feature.properties.iso_a2 === selectedCountry;
   });
 
@@ -143,7 +151,7 @@ function selectCountryDropDown() {
   map.fitBounds(selectedCountryLayer.getBounds());
 
   // Check if the checkbox is checked, and if it is, load airport markers
-  if ($("#capitalCityCheckbox").is(":checked")) {
+  if ($("#airportMarkerCheckbox").is(":checked")) {
     updateAirportMarkers(selectedCountry);
   } else {
     // If the checkbox is unchecked, remove the airport markers
@@ -168,15 +176,16 @@ function populateCountryDropdown() {
     const option = document.createElement("option");
     option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
     option.textContent = countryInfo.name; // Display both name and code
+    // Adding option element to dropdown
     dropdown.appendChild(option);
   });
 }
 
 // // Function to handle geolocation
-function getLocation() {
+function getUserLocation() {
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(
-      function (position) {
+      (position) => {
         let lat = position.coords.latitude;
         let lng = position.coords.longitude;
         // View the location of the current user on zoom level 14 # NOTE # maxZoom = 16
@@ -184,7 +193,7 @@ function getLocation() {
         // You can also use the user's location (lat and lng) for other purposes here
       },
       function (error) {
-        alert("Errorssssss: " + error.message);
+        alert("Error: " + error.message);
       }
     );
   } else {
@@ -192,11 +201,11 @@ function getLocation() {
   }
 }
 
-// $(document).ready(function () {
-// var airports = [];
+// updates the airport marker
 function updateAirportMarkers(selectedCountry) {
-  // Clear existing airport markers on the map, if any
+  // Clear existing airport markers on the map, if there is any
   clearAirportMarkers();
+  // fetch data from php file
   $.ajax({
     url: "libs/php/getCountries.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
@@ -205,22 +214,19 @@ function updateAirportMarkers(selectedCountry) {
       // sends data about the two data parameter(country and language)
       // the value of these data parmeter is determened by the value from
       // the element id
-      airport: $("#capitalCityCheckbox").val(),
+      airport: $("#airportMarkerCheckbox").val(),
       country: selectedCountry,
     },
     success: function (result) {
       if (airportMarkerCluster) {
         airportMarkerCluster.clearLayers();
-        // map.removeLayer(airportMarkerCluster);
       }
-      // console.log(JSON.stringify(result));
       $.each(result.data, function (index, airport) {
-        console.log("hello");
-        let airportName = airport["asciiName"];
-        let airportLat = airport["lat"];
-        let airportLng = airport["lng"];
+        const airportName = airport["asciiName"];
+        const airportLat = airport["lat"];
+        const airportLng = airport["lng"];
 
-        // Add the airport data to the 'airports' dictionary with 'airportName' as the key
+        // Add the airport data to the 'airports' object with 'airportName' as the key
         airports.push({
           name: airportName,
           lat: airportLat,
@@ -228,10 +234,9 @@ function updateAirportMarkers(selectedCountry) {
         });
       });
       console.log(airports);
-      // Create an array to store the airport markers
       // Create markers for each airport and add them to the markers array
-      var markers = airports.map(function (airport) {
-        var marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
+      const markers = airports.map((airport) => {
+        const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
         return marker;
       });
 
@@ -261,18 +266,19 @@ function clearAirportMarkers() {
     // map.removeLayer(airportMarkerCluster);
   }
 }
-$("#capitalCityCheckbox").change(function () {
+$("#airportMarkerCheckbox").change(() => {
   if ($(this).is(":checked")) {
     var selectedCountry = $("#countrySelect").val();
     updateAirportMarkers(selectedCountry);
   } else {
     clearAirportMarkers();
+    // clears the airport array
     airports.length = 0;
   }
 });
 
 window.onload = function () {
   populateCountryDropdown();
-  getLocation();
+  getUserLocation();
   selectCountryDropDown();
 };

@@ -1,4 +1,5 @@
 // Initialize the Leaflet map
+console.log("hell0");
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -83,33 +84,71 @@ let airports = [];
 let airportMarkerCluster; // Declare a variable to store the airport marker cluster
 let selectedCountry;
 
+document.getElementById("countrySelect").addEventListener("change", function () {
+  selectCountryDropDown();
+});
+
+function getUserCountry() {
+  // if ("geolocation" in navigator) {
+  //   navigator.geolocation.getCurrentPosition(
+  //     function (position) {
+  //       const latitude = position.coords.latitude;
+  //       const longitude = position.coords.longitude;
+  //       // Use a reverse geocoding service to determine the country
+  //       const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+  //       $.ajax({
+  //         url: geocodingUrl,
+  //         dataType: "json",
+  //         success: function (data) {
+  //           console.log("Passsssssss");
+  //           const userCountry = data.address.country;
+  //           console.log(userCountry);
+  //           return userCountry;
+  //         },
+  //         error: function (error) {
+  //           console.error("Error:", error);
+  //           $("#countryInfo").text("Could not determine your country.");
+  //         },
+  //       });
+  //     },
+  //     function (error) {
+  //       console.error("Geolocation error:", error);
+  //       $("#countryInfo").text("Could not determine your location.");
+  //     }
+  //   );
+  // } else {
+  //   $("#countryInfo").text("Geolocation is not supported by your browser.");
+  // }
+}
+
 function selectCountryDropDown() {
-  document.getElementById("countrySelect").addEventListener("change", function () {
-    let selectedCountry = this.value; // Get the selected country
-    // Find the GeoJSON data based on the selected country
-    var filteredCountry = country.features.find((feature) => {
-      return feature.properties.iso_a2 === selectedCountry;
-    });
-
-    // Remove the previously added country layer, if it exists
-    if (selectedCountryLayer) {
-      map.removeLayer(selectedCountryLayer);
-    }
-
-    // Create a GeoJSON layer for the selected country
-    selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
-
-    // Zoom out to the bounds of the selected country
-    map.fitBounds(selectedCountryLayer.getBounds());
-
-    // Check if the checkbox is checked, and if it is, load airport markers
-    if ($("#capitalCityCheckbox").is(":checked")) {
-      updateAirportMarkers(selectedCountry);
-    } else {
-      // If the checkbox is unchecked, remove the airport markers
-      clearAirportMarkers();
-    }
+  // getUserCountry();
+  defaultCountryOption = document.getElementById("countrySelect");
+  let selectedCountry = defaultCountryOption.value; // Get the selected country
+  console.log(selectedCountry);
+  // Find the GeoJSON data based on the selected country
+  var filteredCountry = country.features.find((feature) => {
+    return feature.properties.iso_a2 === selectedCountry;
   });
+
+  // Remove the previously added country layer, if it exists
+  if (selectedCountryLayer) {
+    map.removeLayer(selectedCountryLayer);
+  }
+
+  // Create a GeoJSON layer for the selected country
+  selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
+
+  // Zoom out to the bounds of the selected country
+  map.fitBounds(selectedCountryLayer.getBounds());
+
+  // Check if the checkbox is checked, and if it is, load airport markers
+  if ($("#capitalCityCheckbox").is(":checked")) {
+    updateAirportMarkers(selectedCountry);
+  } else {
+    // If the checkbox is unchecked, remove the airport markers
+    clearAirportMarkers();
+  }
 }
 
 function populateCountryDropdown() {
@@ -216,6 +255,8 @@ function clearAirportMarkers() {
   console.log("should clear");
   if (airportMarkerCluster) {
     airportMarkerCluster.clearLayers();
+    airports.length = 0;
+
     // map.removeLayer(airportMarkerCluster);
   }
 }

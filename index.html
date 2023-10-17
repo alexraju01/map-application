@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    <!-- <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
           <div class="modal-header bg-success bg-gradient text-white">
@@ -118,41 +118,31 @@
           </div>
           <div class="modal-body">
             <table class="table table-striped">
+              <p>
+                Select a country from the dropdown and check one or more of the following checkboxes
+                to display markers
+              </p>
               <tr>
                 <td class="text-center">
-                  <i class="fa-solid fa-globe fa-xl text-success"></i>
+                  <i class="fa-solid fa-plane fa-xl text-success"></i>
                 </td>
 
-                <td>Attribute</td>
+                <td>Airports</td>
 
-                <td id="capitalCity" class="text-end">value</td>
+                <td class="text-end">
+                  <input type="checkbox" id="airportMarkerCheckbox" value="airport" />
+                </td>
               </tr>
               <tr>
                 <td class="text-center">
                   <i class="fa-solid fa-street-view fa-xl text-success"></i>
                 </td>
 
-                <td>Attribute</td>
+                <td>National Park</td>
 
-                <td class="text-end">value</td>
-              </tr>
-              <tr>
-                <td class="text-center">
-                  <i class="fa-solid fa-heart fa-xl text-success"></i>
+                <td class="text-end">
+                  <input type="checkbox" id="nationalMarkerCheckbox" value="national" />
                 </td>
-
-                <td>Attribute</td>
-
-                <td class="text-end">value</td>
-              </tr>
-              <tr>
-                <td class="text-center">
-                  <i class="fa-solid fa-car fa-xl text-success"></i>
-                </td>
-
-                <td>Attribute</td>
-
-                <td class="text-end">value</td>
               </tr>
             </table>
           </div>
@@ -163,7 +153,7 @@
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
 
     <!-- Make sure you put this AFTER Leaflet's CSS -->
     <!-- <script

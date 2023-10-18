@@ -8,9 +8,9 @@ $executionStartTime = microtime(true);
 // API URL from geoname website, replace 'YOUR_USERNAME' with your actual username
 // $countryCode = $_REQUEST['countryCode'];
     
-// $api = 'http://api.geonames.org/neighboursJSON?formatted=true&country=' . $_REQUEST['country'] . '&username=alexraju&style=full';
-$api = 'http://api.geonames.org/searchJSON?formatted=true&q=' . $_REQUEST['airport'] . '&country='. $_REQUEST['country'] . '&maxRows=20&lang=en&username=alexraju&style=full';
 
+$api = 'http://api.geonames.org/countryInfoJSON?formatted=true&lang=en&country=' . $_REQUEST['country'] . '&username=alexraju&style=full';
+        // http://api.geonames.org/countryInfoJSON?formatted=true&lang=it&country=DE&username=alexraju&style=full
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Ignore the SSL certification return a string

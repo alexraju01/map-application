@@ -12,12 +12,15 @@ let satellite = L.tileLayer(
       "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
   }
 );
+
 let basemaps = {
   Streets: streets,
   Satellite: satellite,
 };
 
-let map;
+// let air = updateAirportMarkers();
+// console.log(air);
+
 let isVisible = true;
 // This is used to store user current location
 let userMarker;
@@ -80,11 +83,12 @@ function displayMapAndControls(lat, lng, zoom) {
       map.removeLayer(lastMarker);
     }
   });
-  // info easy button to popup a modal
+  // ########## Cluster Markers ##########
   L.easyButton("fa-map-marker-alt fa-lg", function (btn, map) {
     $("#markerModal").modal("show");
   }).addTo(map);
 
+  // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {
     $("#countryInfoModal").modal("show");
   }).addTo(map);
@@ -92,7 +96,6 @@ function displayMapAndControls(lat, lng, zoom) {
 
 let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
 let selectedCountry;
-
 document.getElementById("countrySelect").addEventListener("change", function () {
   selectCountryDropDown();
 });
@@ -153,6 +156,8 @@ function selectCountryDropDown() {
     // If the checkbox is unchecked, remove the airport markers
     clearNationalMarkers();
   }
+  console.log(selectedCountry);
+  getCountryInfo(selectedCountry);
 }
 
 // // Function to handle geolocation
@@ -174,7 +179,6 @@ function getUserLocation() {
     alert("Geolocation is not available in your browser.");
   }
 }
-
 let airports = [];
 let airportMarkerCluster; // Declare a variable to store the airport marker cluster
 // updates the airport marker
@@ -330,6 +334,40 @@ $("#nationalMarkerCheckbox").change(function () {
     nationalPark.length = 0;
   }
 });
+
+//  ####### Get Country Info #########
+function getCountryInfo(selectedCountry) {
+  $.ajax({
+    url: "libs/php/getCountryInfo.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      // sends data about the two data parameter(country and language)
+      // the value of these data parmeter is determened by the value from
+      // the element id
+      country: selectedCountry,
+    },
+    success: function (result) {
+      console.log(result);
+
+      // console.log(JSON.stringify(result));
+
+      console.log();
+      console.log(result["data"][0]["countryName"]);
+      console.log(result["data"][0]["languages"]);
+      console.log(result["data"][0]["capital"]);
+      console.log(result["data"][0]["continent"]);
+
+      console.log($("#displayCountryName").html(result["data"][0]["continent"]));
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
 
 // Ignore this function for now not main functionailty
 function getUserCountry() {

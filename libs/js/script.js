@@ -1,5 +1,4 @@
 // Initialize the Leaflet map
-console.log("hello");
 
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
@@ -82,8 +81,12 @@ function displayMapAndControls(lat, lng, zoom) {
     }
   });
   // info easy button to popup a modal
+  L.easyButton("fa-map-marker-alt fa-lg", function (btn, map) {
+    $("#markerModal").modal("show");
+  }).addTo(map);
+
   L.easyButton("fa-info fa-lg", function (btn, map) {
-    $("#exampleModal").modal("show");
+    $("#countryInfoModal").modal("show");
   }).addTo(map);
 }
 

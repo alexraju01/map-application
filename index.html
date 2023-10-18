@@ -53,7 +53,7 @@
 
     <div id="map"></div>
 
-    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div id="markerModal" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
           <div class="modal-header bg-success bg-gradient text-white">
@@ -104,11 +104,11 @@
       </div>
     </div>
 
-    <div id="exampleModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <!-- <div id="countryInfoModal" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
           <div class="modal-header bg-success bg-gradient text-white">
-            <h5 class="modal-title">Overview</h5>
+            <h5 class="modal-title">Country Information</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -117,32 +117,54 @@
             ></button>
           </div>
           <div class="modal-body">
-            <table class="table table-striped">
-              <p>
-                Select a country from the dropdown and check one or more of the following checkboxes
-                to display markers
-              </p>
+            <p>Country Info</p>
+            <div class="row">
+              <div class="col-4 d-flex justify-content-center">
+                <p><strong>Country Name:</strong></p>
+              </div>
+              <div class="col-8 d-flex justify-content-center">
+                <p id="displayCountryName">India</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-4 d-flex justify-content-center">
+                <p><strong>Language:</strong></p>
+              </div>
+              <div class="col-8 d-flex justify-content-center">
+                <p id="displayLang">Malayalam</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <div id="countryInfoModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">Country Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
               <tr>
-                <td class="text-center">
-                  <i class="fa-solid fa-plane fa-xl text-success"></i>
-                </td>
-
-                <td>Airports</td>
-
-                <td class="text-end">
-                  <input type="checkbox" id="airportMarkerCheckbox" value="airport" />
-                </td>
+                <td><strong>Country Name:</strong></td>
+                <td id="displayCountryName">India</td>
               </tr>
               <tr>
-                <td class="text-center">
-                  <i class="fa-solid fa-street-view fa-xl text-success"></i>
-                </td>
-
-                <td>National Park</td>
-
-                <td class="text-end">
-                  <input type="checkbox" id="nationalMarkerCheckbox" value="national" />
-                </td>
+                <td><strong>Language:</strong></td>
+                <td id="displayLang">Malayalam</td>
               </tr>
             </table>
           </div>

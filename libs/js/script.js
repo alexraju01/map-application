@@ -348,17 +348,20 @@ function getCountryInfo(selectedCountry) {
       country: selectedCountry,
     },
     success: function (result) {
-      console.log(result);
+      // console.log(result);
 
       // console.log(JSON.stringify(result));
 
-      console.log();
       console.log(result["data"][0]["countryName"]);
       console.log(result["data"][0]["languages"]);
       console.log(result["data"][0]["capital"]);
       console.log(result["data"][0]["continent"]);
 
-      console.log($("#displayCountryName").html(result["data"][0]["continent"]));
+      console.log($("#displayCountryName").html(result["data"][0]["countryName"]));
+      console.log($("#displayLang").html(result["data"][0]["languages"]));
+      console.log($("#displayCapital").html(result["data"][0]["capital"]));
+      console.log($("#displayContinet").html(result["data"][0]["continentName"]));
+      console.log($("#displayPopulation").html(result["data"][0]["population"]));
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code

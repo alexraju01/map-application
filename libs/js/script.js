@@ -93,7 +93,7 @@ function displayMapAndControls(lat, lng, zoom) {
     $("#countryInfoModal").modal("show");
   }).addTo(map);
 
-  L.easyButton("fa-info fa-lg", function (btn, map) {
+  L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
     $("#currencyExchange").modal("show");
   }).addTo(map);
 }

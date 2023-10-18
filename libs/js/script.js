@@ -92,6 +92,10 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-info fa-lg", function (btn, map) {
     $("#countryInfoModal").modal("show");
   }).addTo(map);
+
+  L.easyButton("fa-info fa-lg", function (btn, map) {
+    $("#currencyExchange").modal("show");
+  }).addTo(map);
 }
 
 let selectedCountryLayer; // Declare a variable to keep track of the selected country layer

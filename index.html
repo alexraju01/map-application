@@ -104,7 +104,66 @@
       </div>
     </div>
 
-    <!-- <div id="countryInfoModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div id="currencyExchange" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Country Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <form id="currencyConverter">
+              <div class="mb-3">
+                <label for="amount" class="form-label">Amount:</label>
+                <input
+                  type="number"
+                  id="amount"
+                  class="form-control"
+                  placeholder="Enter amount"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="fromCurrency" class="form-label">From Currency:</label>
+                <select id="fromCurrency" class="form-select" required>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="toCurrency" class="form-label">To Currency:</label>
+                <select id="toCurrency" class="form-select" required>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <button type="button" class="btn btn-success" onclick="convertCurrency()">
+                  Convert
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div id="currencyExchange" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
           <div class="modal-header bg-success bg-gradient text-white">
@@ -116,25 +175,33 @@
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
-            <p>Country Info</p>
-            <div class="row">
-              <div class="col-4 d-flex justify-content-center">
-                <p><strong>Country Name:</strong></p>
-              </div>
-              <div class="col-8 d-flex justify-content-center">
-                <p id="displayCountryName">India</p>
-              </div>
+
+          <form id="currencyConverter">
+            <div>
+              <label for="amount">Amount:</label>
+              <input type="number" id="amount" placeholder="Enter amount" step="0.01" required />
             </div>
-            <div class="row">
-              <div class="col-4 d-flex justify-content-center">
-                <p><strong>Language:</strong></p>
-              </div>
-              <div class="col-8 d-flex justify-content-center">
-                <p id="displayLang">Malayalam</p>
-              </div>
+            <div>
+              <label for="fromCurrency">From Currency:</label>
+              <select id="fromCurrency" required>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
             </div>
-          </div>
+            <div>
+              <label for="toCurrency">To Currency:</label>
+              <select id="toCurrency" required>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </div>
+            <div>
+              <button type="button" onclick="convertCurrency()">Convert</button>
+            </div>
+          </form>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
               Close

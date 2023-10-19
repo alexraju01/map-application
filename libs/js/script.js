@@ -419,8 +419,31 @@ function getCurrencies() {
 
     success: function (result) {
       console.log(result.data);
-      $.each(result.data, function (country, currencyCode) {
-        console.log(country, currencyCode);
+
+      // Create an array of key-value pairs (country code and country name) from the object
+      const countryNameArray = $.map(result.data, function (country, currencyCode) {
+        return { currencyCode: currencyCode, country: country };
+      });
+
+      // Sort the array by country name
+      countryNameArray.sort((a, b) => {
+        return a.country.localeCompare(b.country);
+      });
+
+      $.each(countryNameArray, function (index, item) {
+        // creating option html element for both from and to currency
+        const optionFromCurrency = $("<option>", {
+          value: item.currencyCode,
+          text: `${item.country} (${item.currencyCode})`,
+        });
+        const optionToCurrency = $("<option>", {
+          value: item.currencyCode,
+          text: `${item.country} (${item.currencyCode})`,
+        });
+
+        // adding the option to the dropdown
+        $("#fromCurrency").append(optionFromCurrency);
+        $("#toCurrency").append(optionToCurrency);
       });
     },
     error: function (jqXHR, textStatus, errorThrown) {

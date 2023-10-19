@@ -355,7 +355,6 @@ function getCountryInfo(selectedCountry) {
       // console.log(result);
 
       // console.log(JSON.stringify(result));
-
       console.log(result["data"][0]["countryName"]);
       console.log(result["data"][0]["languages"]);
       console.log(result["data"][0]["capital"]);
@@ -409,6 +408,30 @@ function getUserCountry() {
   //   $("#countryInfo").text("Geolocation is not supported by your browser.");
   // }
 }
+
+// Get currencies
+//  ####### Get Country Info #########
+function getCurrencies() {
+  $.ajax({
+    url: "libs/php/getCurrencies.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+
+    success: function (result) {
+      console.log(result.data);
+      $.each(result.data, function (country, currencyCode) {
+        console.log(country, currencyCode);
+      });
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+getCurrencies();
 
 window.onload = function () {
   populateCountryDropdown();

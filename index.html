@@ -104,11 +104,11 @@
       </div>
     </div>
 
-    <!-- <div id="countryInfoModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div id="currencyExchange" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
-          <div class="modal-header bg-success bg-gradient text-white">
-            <h5 class="modal-title">Country Information</h5>
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Currency Exchange</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -116,33 +116,46 @@
               aria-label="Close"
             ></button>
           </div>
+
           <div class="modal-body">
-            <p>Country Info</p>
-            <div class="row">
-              <div class="col-4 d-flex justify-content-center">
-                <p><strong>Country Name:</strong></p>
+            <form id="currencyConverter">
+              <div class="mb-3">
+                <label for="amount" id="amount" class="form-label">Amount:</label>
+                <input
+                  type="number"
+                  id="amount"
+                  class="form-control"
+                  placeholder="Enter amount"
+                  step="0.01"
+                  required
+                />
               </div>
-              <div class="col-8 d-flex justify-content-center">
-                <p id="displayCountryName">India</p>
+              <div class="mb-3">
+                <label for="fromCurrency" class="form-label">From Currency:</label>
+                <select id="fromCurrency" class="form-select" required>
+                  <!-- populated throught open exchange currency -->
+                </select>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-4 d-flex justify-content-center">
-                <p><strong>Language:</strong></p>
+              <div class="mb-3">
+                <label for="toCurrency" class="form-label">To Currency:</label>
+                <select id="toCurrency" class="form-select" required>
+                  <!-- populated throught open exchange currency -->
+                </select>
               </div>
-              <div class="col-8 d-flex justify-content-center">
-                <p id="displayLang">Malayalam</p>
+              <div class="mb-3">
+                <button type="button" id="convert" class="btn btn-success">Convert</button>
               </div>
-            </div>
+            </form>
           </div>
+
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">
               Close
             </button>
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
 
     <div id="countryInfoModal" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -182,6 +195,66 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="weatherInfoModal" class="modal fade" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-cloud-sun fa-2x mr-2"></i>
+              <!-- Replace with the appropriate weather icon -->
+              Weather Information
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="cityDropdown" class="form-label">Select a City:</label>
+              <select id="cityDropdown" class="form-select">
+                <!-- populate -->
+              </select>
+            </div>
+            <div class="text-center">
+              <i class="fas fa-sun fa-3x"></i>
+              <!-- Display the current weather icon here -->
+              <h2 id="displayTemperature"></h2>
+            </div>
+            <table class="table table-bordered mt-4">
+              <tr>
+                <td><strong>Location:</strong></td>
+                <td id="displayLocation">City 1</td>
+              </tr>
+              <tr>
+                <td><strong>Humidity:</strong></td>
+                <td id="displayHumidity">Sample Humidity</td>
+              </tr>
+              <tr>
+                <td><strong>Conditions:</strong></td>
+                <td>
+                  <i class="fas fa-sun fa-lg mr-2"></i>
+                  <!-- Replace with the appropriate weather icon -->
+                  <span id="displayConditions">Sample Conditions</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Wind Speed:</strong></td>
+                <td id="displayWindSpeed">Sample Wind Speed</td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">
               Close
             </button>
           </div>

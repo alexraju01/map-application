@@ -454,8 +454,68 @@ function getCurrencies() {
     },
   });
 }
+
+function convertCurrency() {
+  $.ajax({
+    url: "libs/php/convertCurrency.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      amount: $("#amount").val(),
+      from: $("#fromCurrency").val(),
+      to: $("#toCurrency").val(),
+    },
+
+    success: function (result) {
+      console.log(result.data);
+
+      // Create an array of key-value pairs (country code and country name) from the object
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
 getCurrencies();
 
+
+function getWeather(){
+  $.ajax({
+    url: "libs/php/convertCurrency.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      amount: $("#amount").val(),
+      from: $("#fromCurrency").val(),
+      to: $("#toCurrency").val(),
+    },
+
+    success: function (result) {
+      console.log(result.data);
+
+      // Create an array of key-value pairs (country code and country name) from the object
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
+
+var convertButton = document.getElementById("convert");
+// Add a click event listener to the button
+convertButton.addEventListener("click", function () {
+  // Display an alert when the button is clicked
+  console.log("clicked");
+  convertCurrency();
+});
 window.onload = function () {
   populateCountryDropdown();
   getUserLocation();

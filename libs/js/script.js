@@ -96,14 +96,14 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
     $("#currencyExchange").modal("show");
   }).addTo(map);
+  L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
+    $("#weatherInfoModal").modal("show");
+  }).addTo(map);
 }
 
 let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
 let selectedCountry;
-document.getElementById("countrySelect").addEventListener("change", function () {
-  selectCountryDropDown();
-});
-
+let countryCode;
 function populateCountryDropdown() {
   // Extract country names and ISO Alpha-3 codes from the 'country' object
   const countryDetail = country.features.map((feature) => {
@@ -132,6 +132,7 @@ function selectCountryDropDown() {
   let selectedCountry = countryOption.value; // Get the selected country
   // Find the GeoJSON data based on the selected country
   let filteredCountry = country.features.find((feature) => {
+    countryCode = selectedCountry;
     return feature.properties.iso_a2 === selectedCountry;
   });
 
@@ -160,7 +161,7 @@ function selectCountryDropDown() {
     // If the checkbox is unchecked, remove the airport markers
     clearNationalMarkers();
   }
-  console.log(selectedCountry);
+
   getCountryInfo(selectedCountry);
 }
 
@@ -352,19 +353,11 @@ function getCountryInfo(selectedCountry) {
       country: selectedCountry,
     },
     success: function (result) {
-      // console.log(result);
-
-      // console.log(JSON.stringify(result));
-      console.log(result["data"][0]["countryName"]);
-      console.log(result["data"][0]["languages"]);
-      console.log(result["data"][0]["capital"]);
-      console.log(result["data"][0]["continent"]);
-
-      console.log($("#displayCountryName").html(result["data"][0]["countryName"]));
-      console.log($("#displayLang").html(result["data"][0]["languages"]));
-      console.log($("#displayCapital").html(result["data"][0]["capital"]));
-      console.log($("#displayContinet").html(result["data"][0]["continentName"]));
-      console.log($("#displayPopulation").html(result["data"][0]["population"]));
+      $("#displayCountryName").html(result["data"][0]["countryName"]);
+      $("#displayLang").html(result["data"][0]["languages"]);
+      $("#displayCapital").html(result["data"][0]["capital"]);
+      $("#displayContinet").html(result["data"][0]["continentName"]);
+      $("#displayPopulation").html(result["data"][0]["population"]);
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
@@ -418,8 +411,6 @@ function getCurrencies() {
     dataType: "json",
 
     success: function (result) {
-      console.log(result.data);
-
       // Create an array of key-value pairs (country code and country name) from the object
       const countryNameArray = $.map(result.data, function (country, currencyCode) {
         return { currencyCode: currencyCode, country: country };
@@ -480,24 +471,51 @@ function convertCurrency() {
   });
 }
 
-getCurrencies();
+let cityLat;
+let cityLng;
+let cityName;
+// function getCountryPlaceLatLng(sortedPlaceData) {}
 
-
-function getWeather(){
+function getCountryPlaceLatLng() {
   $.ajax({
-    url: "libs/php/convertCurrency.php", //  HTTP request is sent to this location
+    url: "libs/php/getCountryPlaceLatLng.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
     dataType: "json",
     data: {
-      amount: $("#amount").val(),
-      from: $("#fromCurrency").val(),
-      to: $("#toCurrency").val(),
+      country: $("#countrySelect").val(),
     },
 
     success: function (result) {
       console.log(result.data);
+      const sortedPlaceData = result.data.sort((a, b) =>
+        a.toponymName.localeCompare(b.toponymName)
+      ); // Sort by place name
+      cityDropdown.innerHTML = "";
+      sortedPlaceData.forEach((place) => {
+        placeName = place["toponymName"];
+        placeLat = place["lat"];
+        placeLng = place["lng"];
 
-      // Create an array of key-value pairs (country code and country name) from the object
+        const option = document.createElement("option");
+        option.value = `${placeLat},${placeLng}`; // Set the value to lat,lng
+        option.text = placeName; // Display the city name as the text
+
+        cityDropdown.appendChild(option);
+      });
+      cityDropdown.addEventListener("change", function () {
+        // //  the selected index retrievs the option element
+        const selectedOption = this.options[this.selectedIndex];
+        console.log(selectedOption);
+        const [lat, lng] = selectedOption.value.split(","); // split the value: lat, lng by the comma
+        cityName = selectedOption.text;
+        // cityLat = lat;
+        // cityLng = lng;
+
+        // console.log("Selected City: " + selectedOption.text);
+        // console.log("Latitude: " + cityLat);
+        // console.log("Longitude: " + cityLng);
+        getWeather();
+      });
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
@@ -508,6 +526,29 @@ function getWeather(){
   });
 }
 
+function getWeather() {
+  $.ajax({
+    url: "libs/php/getWeatherData.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      cityNames: cityName,
+      countryCodes: countryCode,
+    },
+
+    success: function (result) {
+      console.log(result);
+      $("#displayLocation").html(result.data.name);
+      $("#displayHumidity").html(result.data.main.humidity);
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
 
 var convertButton = document.getElementById("convert");
 // Add a click event listener to the button
@@ -516,7 +557,14 @@ convertButton.addEventListener("click", function () {
   console.log("clicked");
   convertCurrency();
 });
+
+getCurrencies();
+
 window.onload = function () {
+  document.getElementById("countrySelect").addEventListener("change", function () {
+    selectCountryDropDown();
+    getCountryPlaceLatLng();
+  });
   populateCountryDropdown();
   getUserLocation();
   selectCountryDropDown();

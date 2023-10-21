@@ -202,14 +202,13 @@
       </div>
     </div>
 
-    <div id="weatherInfoModal" class="modal fade" data-bs-backdrop="false" tabindex="-1">
+    <div class="modal fade" id="weatherInfoModal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header bg-success text-white">
             <h5 class="modal-title">
               <i class="fas fa-cloud-sun fa-2x mr-2"></i>
-              <!-- Replace with the appropriate weather icon -->
-              Weather Information
+              <span id="displayWeatherDescription">Weather Information</span>
             </h5>
             <button
               type="button"
@@ -219,39 +218,108 @@
             ></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <label for="cityDropdown" class="form-label">Select a City:</label>
-              <select id="cityDropdown" class="form-select">
-                <!-- populate -->
-              </select>
+            <ul class="nav nav-tabs" id="weatherTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <a
+                  class="nav-link active"
+                  id="currentWeatherTab"
+                  data-bs-toggle="tab"
+                  href="#currentWeather"
+                  role="tab"
+                  >Current Weather</a
+                >
+              </li>
+              <li class="nav-item" role="presentation">
+                <a
+                  class="nav-link"
+                  id="forecastTab"
+                  data-bs-toggle="tab"
+                  href="#forecast"
+                  role="tab"
+                  >Forecast</a
+                >
+              </li>
+            </ul>
+            <div class="tab-content" id="weatherTabsContent">
+              <div class="tab-pane fade show active" id="currentWeather" role="tabpanel">
+                <!-- Current Weather content -->
+                <div class="mb-3">
+                  <label for="cityWeatherDropdown" class="form-label">Select a City:</label>
+                  <select id="cityWeatherDropdown" class="form-select">
+                    <!-- populate -->
+                  </select>
+                </div>
+                <div class="text-center">
+                  <img id="weatherIcon" />
+                  <!-- Display the current weather icon here -->
+                  <h2 id="displayWeatherText"></h2>
+                </div>
+                <table class="table table-bordered mt-4">
+                  <tr>
+                    <td><strong>Humidity:</strong></td>
+                    <td id="displayHumidity"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Temperature:</strong></td>
+                    <td class="displayTemperature"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>feels like:</strong></td>
+                    <td id="displayFeelsLike"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Wind Speed:</strong></td>
+                    <td id="displayWindSpeed"></td>
+                  </tr>
+                </table>
+              </div>
+              <div class="tab-pane fade" id="forecast" role="tabpanel">
+                <!-- Forecast content (hidden by default) -->
+                <!-- Add your forecast content here -->
+                <div class="mb-3">
+                  <label for="cityDropdownForecast" class="form-label">Select a City:</label>
+                  <select id="cityDropdownForecast" class="form-select">
+                    <!-- populate -->
+                  </select>
+                </div>
+                <table class="table table-bordered mt-4">
+                  <tr>
+                    <td><strong>Day:</strong></td>
+                    <td id="displayDay1"></td>
+                    <td id="displayDay2"></td>
+                    <td id="displayDay3"></td>
+                    <td id="displayDay4"></td>
+                    <td id="displayDay5"></td>
+                  </tr>
+
+                  <tr>
+                    <td><strong>Humidity:</strong></td>
+                    <td id="D1displayHumidity"></td>
+                    <td id="D2displayHumidity"></td>
+                    <td id="D3displayHumidity"></td>
+                    <td id="D4displayHumidity"></td>
+                    <td id="D5displayHumidity"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Temperature:</strong></td>
+                    <td id="D1displayTemperature"></td>
+                    <td id="D2displayTemperature"></td>
+                    <td id="D3displayTemperature"></td>
+                    <td id="D4displayTemperature"></td>
+                    <td id="D5displayTemperature"></td>
+                  </tr>
+
+                  <tr>
+                    <td><strong>Wind Speed:</strong></td>
+                    <td id="D1displayWindSpeed"></td>
+                    <td id="D2displayWindSpeed"></td>
+                    <td id="D3displayWindSpeed"></td>
+                    <td id="D4displayWindSpeed"></td>
+                    <td id="D5displayWindSpeed"></td>
+                  </tr>
+                </table>
+              </div>
             </div>
-            <div class="text-center">
-              <i class="fas fa-sun fa-3x"></i>
-              <!-- Display the current weather icon here -->
-              <h2 id="displayTemperature"></h2>
-            </div>
-            <table class="table table-bordered mt-4">
-              <tr>
-                <td><strong>Location:</strong></td>
-                <td id="displayLocation">City 1</td>
-              </tr>
-              <tr>
-                <td><strong>Humidity:</strong></td>
-                <td id="displayHumidity">Sample Humidity</td>
-              </tr>
-              <tr>
-                <td><strong>Conditions:</strong></td>
-                <td>
-                  <i class="fas fa-sun fa-lg mr-2"></i>
-                  <!-- Replace with the appropriate weather icon -->
-                  <span id="displayConditions">Sample Conditions</span>
-                </td>
-              </tr>
-              <tr>
-                <td><strong>Wind Speed:</strong></td>
-                <td id="displayWindSpeed">Sample Wind Speed</td>
-              </tr>
-            </table>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">

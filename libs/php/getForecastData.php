@@ -1,4 +1,5 @@
 
+
 <?php
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
@@ -11,10 +12,8 @@ $executionStartTime = microtime(true);
 
 
 // Initialize CURL:
-// https://api.openweathermap.org/geo/1.0/direct?q=edinburgh,gb&limit=1&appid=7dc339d1fbee7fe2d5b53e5f19b90502 
-$api = 'http://api.geonames.org/searchJSON?q=&country='.$_REQUEST['country'].'&maxRows=100&username=alexraju&style=SHORT&cities=cities1000';
 
-
+$api = 'https://api.openweathermap.org/data/2.5/forecast?q='.$_REQUEST['cityNames'].','.$_REQUEST['countryCodes'].'&appid=f60bdf556374ad06eba301b79765e1fa';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Ignore the SSL certification return a string
@@ -35,7 +34,7 @@ $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = $decode['geonames'];
+$output['data'] = $decode;
 
 // Set the response header to indicate that the response is in JSON format
 header('Content-Type: application/json; charset=UTF-8');

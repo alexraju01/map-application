@@ -96,7 +96,7 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
     $("#currencyExchange").modal("show");
   }).addTo(map);
-  L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
+  L.easyButton(" fa-cloud-sun fa-lg", function (btn, map) {
     $("#weatherInfoModal").modal("show");
   }).addTo(map);
 }
@@ -474,9 +474,10 @@ function convertCurrency() {
 let cityLat;
 let cityLng;
 let cityName;
-// function getCountryPlaceLatLng(sortedPlaceData) {}
+const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
+const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
 
-function getCountryPlaceLatLng() {
+function populateCityWeatherDropdown(cityDropdown) {
   $.ajax({
     url: "libs/php/getCountryPlaceLatLng.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
@@ -486,10 +487,10 @@ function getCountryPlaceLatLng() {
     },
 
     success: function (result) {
-      console.log(result.data);
       const sortedPlaceData = result.data.sort((a, b) =>
         a.toponymName.localeCompare(b.toponymName)
       ); // Sort by place name
+
       cityDropdown.innerHTML = "";
       sortedPlaceData.forEach((place) => {
         placeName = place["toponymName"];
@@ -502,19 +503,23 @@ function getCountryPlaceLatLng() {
 
         cityDropdown.appendChild(option);
       });
+
       cityDropdown.addEventListener("change", function () {
         // //  the selected index retrievs the option element
         const selectedOption = this.options[this.selectedIndex];
-        console.log(selectedOption);
-        const [lat, lng] = selectedOption.value.split(","); // split the value: lat, lng by the comma
-        cityName = selectedOption.text;
-        // cityLat = lat;
-        // cityLng = lng;
+        cityName = selectedOption.text.replace(" ", "%20");
 
-        // console.log("Selected City: " + selectedOption.text);
-        // console.log("Latitude: " + cityLat);
-        // console.log("Longitude: " + cityLng);
-        getWeather();
+        // console.log(encodedString);
+        if (cityDropdown === cityWeatherDropdown) {
+          console.log("matches");
+          console.log(cityDropdown);
+          getWeatherData();
+        }
+        if (cityDropdown === cityDropdownForecast) {
+          console.log("matches");
+          console.log(cityDropdownForecast);
+          getForecastData();
+        }
       });
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -526,7 +531,14 @@ function getCountryPlaceLatLng() {
   });
 }
 
-function getWeather() {
+// ########## Convert kelvin value to celsius ##########
+function kelvinToCelsius(kelvin) {
+  let celsius = kelvin - 273.15;
+  celsius = celsius.toFixed(2);
+  return `${celsius}°C`;
+}
+
+function getWeatherData() {
   $.ajax({
     url: "libs/php/getWeatherData.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
@@ -537,9 +549,16 @@ function getWeather() {
     },
 
     success: function (result) {
-      console.log(result);
-      $("#displayLocation").html(result.data.name);
+      console.log(result.data);
+      const weatherIcon = result.data.weather[0].icon;
+      document.getElementById(
+        "weatherIcon"
+      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      $("#displayWeatherText").html(result.data.weather[0].description);
       $("#displayHumidity").html(result.data.main.humidity);
+      $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));
+      $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
+      $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
@@ -550,10 +569,73 @@ function getWeather() {
   });
 }
 
-var convertButton = document.getElementById("convert");
+const week = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
+// ########### Populating the field title by days of the week  #############
+function populate5DaysByName() {
+  for (let i = 1; i <= 5; i++) {
+    const tdElementDays = document.getElementById(`displayDay${i}`);
+    if (tdElementDays) {
+      tdElementDays.textContent = week[i - 1];
+    }
+  }
+}
+// ########## Populating humidity field
+function populateForecastField(humidity, temperature, windSpeed) {
+  for (let i = 1; i <= 5; i++) {
+    // D1displayHumidity;
+    const tdElementHumidity = document.getElementById(`D${i}displayHumidity`);
+    const tdElementTemperature = document.getElementById(`D${i}displayTemperature`);
+    const tdElementWindSpeed = document.getElementById(`D${i}displayWindSpeed`);
+
+    if (tdElementHumidity) {
+      tdElementHumidity.textContent = humidity[i - 1];
+    }
+
+    if (tdElementTemperature) {
+      tdElementTemperature.textContent = kelvinToCelsius(temperature[i - 1]);
+    }
+    if (tdElementWindSpeed) {
+      tdElementWindSpeed.textContent = `${windSpeed[i - 1]} mph`;
+    }
+  }
+}
+
+let forecastHumidity = [];
+let forecastTemp = [];
+let forecastWindSpeed = [];
+function getForecastData() {
+  $.ajax({
+    url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      cityNames: cityName,
+      countryCodes: countryCode,
+    },
+
+    success: function (result) {
+      const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
+
+      forecastList.forEach((forecast) => {
+        forecastHumidity.push(forecast.main.humidity);
+        forecastTemp.push(forecast.main.temp);
+        forecastWindSpeed.push(forecast.wind.speed);
+        populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
+        // $("#D1displayLocation").html(forecast.main.temp);
+      });
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
+let convertButton = document.getElementById("convert");
 // Add a click event listener to the button
 convertButton.addEventListener("click", function () {
-  // Display an alert when the button is clicked
   console.log("clicked");
   convertCurrency();
 });
@@ -563,7 +645,9 @@ getCurrencies();
 window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
-    getCountryPlaceLatLng();
+    populateCityWeatherDropdown(cityWeatherDropdown);
+    populate5DaysByName();
+    populateCityWeatherDropdown(cityDropdownForecast);
   });
   populateCountryDropdown();
   getUserLocation();

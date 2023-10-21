@@ -506,14 +506,11 @@ function getCountryPlaceLatLng() {
         // //  the selected index retrievs the option element
         const selectedOption = this.options[this.selectedIndex];
         console.log(selectedOption);
-        const [lat, lng] = selectedOption.value.split(","); // split the value: lat, lng by the comma
         cityName = selectedOption.text;
-        // cityLat = lat;
-        // cityLng = lng;
+        cityName = cityName.replace(" ", "%20");
 
-        // console.log("Selected City: " + selectedOption.text);
-        // console.log("Latitude: " + cityLat);
-        // console.log("Longitude: " + cityLng);
+        // console.log(encodedString);
+        console.log(cityName);
         getWeather();
       });
     },
@@ -537,7 +534,7 @@ function getWeather() {
     },
 
     success: function (result) {
-      console.log(result);
+      console.log(result.data);
       $("#displayLocation").html(result.data.name);
       $("#displayHumidity").html(result.data.main.humidity);
     },

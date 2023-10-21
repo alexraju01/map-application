@@ -12,7 +12,8 @@ $executionStartTime = microtime(true);
 
 // Initialize CURL:
 // https://api.openweathermap.org/geo/1.0/direct?q=edinburgh,gb&limit=1&appid=7dc339d1fbee7fe2d5b53e5f19b90502 
-$api = 'http://api.geonames.org/searchJSON?username=alexraju&country='.$_REQUEST['country'].'&maxRows=1000&featureClass=P';
+$api = 'http://api.geonames.org/searchJSON?q=&country='.$_REQUEST['country'].'&maxRows=100&username=alexraju&style=SHORT&cities=cities1000';
+
 
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();

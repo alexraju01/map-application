@@ -474,9 +474,10 @@ function convertCurrency() {
 let cityLat;
 let cityLng;
 let cityName;
-// function getCountryPlaceLatLng(sortedPlaceData) {}
+const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
+const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
 
-function getCountryPlaceLatLng() {
+function populateCityWeatherDropdown(cityDropdown) {
   $.ajax({
     url: "libs/php/getCountryPlaceLatLng.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
@@ -486,10 +487,10 @@ function getCountryPlaceLatLng() {
     },
 
     success: function (result) {
-      console.log(result.data);
       const sortedPlaceData = result.data.sort((a, b) =>
         a.toponymName.localeCompare(b.toponymName)
       ); // Sort by place name
+
       cityDropdown.innerHTML = "";
       sortedPlaceData.forEach((place) => {
         placeName = place["toponymName"];
@@ -502,16 +503,23 @@ function getCountryPlaceLatLng() {
 
         cityDropdown.appendChild(option);
       });
+
       cityDropdown.addEventListener("change", function () {
         // //  the selected index retrievs the option element
         const selectedOption = this.options[this.selectedIndex];
-        console.log(selectedOption);
-        cityName = selectedOption.text;
-        cityName = cityName.replace(" ", "%20");
+        cityName = selectedOption.text.replace(" ", "%20");
 
         // console.log(encodedString);
-        console.log(cityName);
-        getWeather();
+        if (cityDropdown === cityWeatherDropdown) {
+          console.log("matches");
+          console.log(cityDropdown);
+          getWeatherData();
+        }
+        if (cityDropdown === cityDropdownForecast) {
+          console.log("matches");
+          console.log(cityDropdownForecast);
+          getForecastData();
+        }
       });
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -523,7 +531,14 @@ function getCountryPlaceLatLng() {
   });
 }
 
-function getWeather() {
+// ########## Convert kelvin value to celsius ##########
+function kelvinToCelsius(kelvin) {
+  let celsius = kelvin - 273.15;
+  celsius = celsius.toFixed(2);
+  return `${celsius}°C`;
+}
+
+function getWeatherData() {
   $.ajax({
     url: "libs/php/getWeatherData.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
@@ -537,6 +552,9 @@ function getWeather() {
       console.log(result.data);
       $("#displayLocation").html(result.data.name);
       $("#displayHumidity").html(result.data.main.humidity);
+      $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));
+      $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
+      $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
@@ -547,10 +565,40 @@ function getWeather() {
   });
 }
 
-var convertButton = document.getElementById("convert");
+const week = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
+function getForecastData() {
+  $.ajax({
+    url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      cityNames: cityName,
+      countryCodes: countryCode,
+    },
+
+    success: function (result) {
+      console.log(result.data);
+      const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
+      console.log(forecastList);
+
+      forecastList.forEach((forecast) => {
+        const date = new Date(forecast.dt_txt);
+        const dayOfWeekIndex = date.getDay();
+        console.log(week[dayOfWeekIndex]);
+      });
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log("fail");
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
+let convertButton = document.getElementById("convert");
 // Add a click event listener to the button
 convertButton.addEventListener("click", function () {
-  // Display an alert when the button is clicked
   console.log("clicked");
   convertCurrency();
 });
@@ -560,7 +608,8 @@ getCurrencies();
 window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
-    getCountryPlaceLatLng();
+    populateCityWeatherDropdown(cityWeatherDropdown);
+    populateCityWeatherDropdown(cityDropdownForecast);
   });
   populateCountryDropdown();
   getUserLocation();

@@ -551,9 +551,9 @@ function getWeatherData() {
     success: function (result) {
       console.log(result.data);
       const weatherIcon = result.data.weather[0].icon;
-      document.getElementById(
-        "weatherIcon"
-      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      // document.getElementById(
+      //   "weatherIcon"
+      // ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
       $("#displayWeatherText").html(result.data.weather[0].description);
       $("#displayHumidity").html(result.data.main.humidity);
       $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));

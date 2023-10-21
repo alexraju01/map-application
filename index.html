@@ -205,7 +205,7 @@
     <div class="modal fade" id="weatherInfoModal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header bg-success text-white">
             <h5 class="modal-title">
               <i class="fas fa-cloud-sun fa-2x mr-2"></i>
               <span id="displayWeatherDescription">Weather Information</span>
@@ -250,15 +250,11 @@
                   </select>
                 </div>
                 <div class="text-center">
-                  <i class="fas fa-sun fa-3x"></i>
+                  <img id="weatherIcon" />
                   <!-- Display the current weather icon here -->
-                  <h2 class="displayTemperature"></h2>
+                  <h2 id="displayWeatherText"></h2>
                 </div>
                 <table class="table table-bordered mt-4">
-                  <tr>
-                    <td><strong>Location:</strong></td>
-                    <td id="displayLocation"></td>
-                  </tr>
                   <tr>
                     <td><strong>Humidity:</strong></td>
                     <td id="displayHumidity"></td>
@@ -295,35 +291,31 @@
                     <td id="displayDay4"></td>
                     <td id="displayDay5"></td>
                   </tr>
-                  <tr>
-                    <td><strong>Location:</strong></td>
-                    <td id="D1displayLocation"></td>
-                    <td id="D2displayLocation"></td>
-                    <td id="D3displayLocation"></td>
-                  </tr>
+
                   <tr>
                     <td><strong>Humidity:</strong></td>
                     <td id="D1displayHumidity"></td>
                     <td id="D2displayHumidity"></td>
                     <td id="D3displayHumidity"></td>
+                    <td id="D4displayHumidity"></td>
+                    <td id="D5displayHumidity"></td>
                   </tr>
                   <tr>
                     <td><strong>Temperature:</strong></td>
                     <td id="D1displayTemperature"></td>
                     <td id="D2displayTemperature"></td>
                     <td id="D3displayTemperature"></td>
+                    <td id="D4displayTemperature"></td>
+                    <td id="D5displayTemperature"></td>
                   </tr>
-                  <tr>
-                    <td><strong>feels like:</strong></td>
-                    <td id="D1displayFeelsLike"></td>
-                    <td id="D2displayFeelsLike"></td>
-                    <td id="D3displayFeelsLike"></td>
-                  </tr>
+
                   <tr>
                     <td><strong>Wind Speed:</strong></td>
                     <td id="D1displayWindSpeed"></td>
                     <td id="D2displayWindSpeed"></td>
                     <td id="D3displayWindSpeed"></td>
+                    <td id="D4displayWindSpeed"></td>
+                    <td id="D5displayWindSpeed"></td>
                   </tr>
                 </table>
               </div>

@@ -96,7 +96,7 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
     $("#currencyExchange").modal("show");
   }).addTo(map);
-  L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
+  L.easyButton(" fa-cloud-sun fa-lg", function (btn, map) {
     $("#weatherInfoModal").modal("show");
   }).addTo(map);
 }
@@ -550,7 +550,11 @@ function getWeatherData() {
 
     success: function (result) {
       console.log(result.data);
-      $("#displayLocation").html(result.data.name);
+      const weatherIcon = result.data.weather[0].icon;
+      document.getElementById(
+        "weatherIcon"
+      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      $("#displayWeatherText").html(result.data.weather[0].description);
       $("#displayHumidity").html(result.data.main.humidity);
       $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));
       $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
@@ -566,6 +570,39 @@ function getWeatherData() {
 }
 
 const week = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
+// ########### Populating the field title by days of the week  #############
+function populate5DaysByName() {
+  for (let i = 1; i <= 5; i++) {
+    const tdElementDays = document.getElementById(`displayDay${i}`);
+    if (tdElementDays) {
+      tdElementDays.textContent = week[i - 1];
+    }
+  }
+}
+// ########## Populating humidity field
+function populateForecastField(humidity, temperature, windSpeed) {
+  for (let i = 1; i <= 5; i++) {
+    // D1displayHumidity;
+    const tdElementHumidity = document.getElementById(`D${i}displayHumidity`);
+    const tdElementTemperature = document.getElementById(`D${i}displayTemperature`);
+    const tdElementWindSpeed = document.getElementById(`D${i}displayWindSpeed`);
+
+    if (tdElementHumidity) {
+      tdElementHumidity.textContent = humidity[i - 1];
+    }
+
+    if (tdElementTemperature) {
+      tdElementTemperature.textContent = kelvinToCelsius(temperature[i - 1]);
+    }
+    if (tdElementWindSpeed) {
+      tdElementWindSpeed.textContent = `${windSpeed[i - 1]} mph`;
+    }
+  }
+}
+
+let forecastHumidity = [];
+let forecastTemp = [];
+let forecastWindSpeed = [];
 function getForecastData() {
   $.ajax({
     url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
@@ -577,14 +614,14 @@ function getForecastData() {
     },
 
     success: function (result) {
-      console.log(result.data);
       const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
-      console.log(forecastList);
 
       forecastList.forEach((forecast) => {
-        const date = new Date(forecast.dt_txt);
-        const dayOfWeekIndex = date.getDay();
-        console.log(week[dayOfWeekIndex]);
+        forecastHumidity.push(forecast.main.humidity);
+        forecastTemp.push(forecast.main.temp);
+        forecastWindSpeed.push(forecast.wind.speed);
+        populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
+        // $("#D1displayLocation").html(forecast.main.temp);
       });
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -609,6 +646,7 @@ window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
+    populate5DaysByName();
     populateCityWeatherDropdown(cityDropdownForecast);
   });
   populateCountryDropdown();

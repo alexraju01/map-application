@@ -1,9 +1,7 @@
 
 
+
 <?php
-header('Access-Control-Allow-Origin: https://alexraju.co.uk'); // Replace '*' with the specific domain allowed
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
 
@@ -15,6 +13,7 @@ $executionStartTime = microtime(true);
 
 
 // Initialize CURL:
+
 $api = 'https://api.openweathermap.org/data/2.5/weather?q='.$_REQUEST['cityNames'].','. $_REQUEST['countryCodes']. '&appid=f60bdf556374ad06eba301b79765e1fa';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();

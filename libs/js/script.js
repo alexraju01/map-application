@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-console.log("testing2");
+console.log("testing4");
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -96,8 +96,13 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-sterling-sign fa-lg", function (btn, map) {
     $("#currencyExchange").modal("show");
   }).addTo(map);
+
   L.easyButton(" fa-cloud-sun fa-lg", function (btn, map) {
     $("#weatherInfoModal").modal("show");
+  }).addTo(map);
+
+  L.easyButton(" fa-cloud-sun fa-lg", function (btn, map) {
+    $("#newsModal").modal("show");
   }).addTo(map);
 }
 
@@ -192,6 +197,7 @@ function getUserCurrentCountry(latitude, longitude) {
           populateCityWeatherDropdown(cityWeatherDropdown);
           populateCityWeatherDropdown(cityDropdownForecast);
           populate5DaysByName();
+          getNewsData();
           break;
         }
       }
@@ -630,8 +636,78 @@ convertButton.addEventListener("click", function () {
   console.log("clicked");
   convertCurrency();
 });
-
 getCurrencies();
+let newsArticle = [];
+function getNewsData() {
+  $.ajax({
+    url: "libs/php/getNewsData.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      country: countryCode,
+    },
+
+    success: function (result) {
+      console.log(result.data);
+      result.data.articles.forEach(function (article, index) {
+        // Display the article information
+        console.log(`Article ${index + 1}:`);
+        // console.log(`Title: ${article.title}`);
+        // console.log(`Author: ${article.source.name}`);
+        // console.log(`Description: ${article.publishedAt}`);
+        console.log("---");
+        console.log(article);
+        newsArticle.push({
+          num: index + 1,
+          title: article.title,
+          publishAt: article.publishedAt,
+          source: article.source.name,
+          url: article.url,
+        });
+      });
+      console.log(newsArticle.length);
+      console.log(newsArticle);
+      displayArticle(newsArticle);
+      // newsArticle.length = 0;
+      // $("#displayNews").html(kelvinToCelsius(result.data.main.feels_like));
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log(jqXHR);
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
+}
+
+function displayArticle(article) {
+  for (let i = 0; i < article.length; i++) {
+    console.log(article[i].title);
+    const displayNewsNum = document.getElementById(`displayNewsNum${i + 1}`);
+    const displayNewsTitle = document.getElementById(`displayNewsTitle${i + 1}`);
+    const displayNewsPublishedAt = document.getElementById(`displayNewsPublishedAt${i + 1}`);
+    const displayNewsSource = document.getElementById(`displayNewsSource${i + 1}`);
+    const displayNewsUrl = document.getElementById(`displayNewsUrl${i + 1}`);
+    console.log(displayNewsPublishedAt);
+    console.log(article.displayNewsPublishedAt);
+    if (displayNewsNum) {
+      displayNewsNum.textContent = article[i].num;
+    }
+    if (displayNewsTitle) {
+      displayNewsTitle.textContent = article[i].title;
+    }
+    if (displayNewsPublishedAt) {
+      displayNewsPublishedAt.textContent = article[i].publishAt;
+      console.log(displayNewsPublishedAt);
+    }
+    if (displayNewsSource) {
+      displayNewsSource.textContent = article[i].source;
+    }
+    if (displayNewsUrl) {
+      displayNewsUrl.textContent = article[i].url;
+    }
+  }
+}
 
 function getUserPosition() {
   if ("geolocation" in navigator) {
@@ -654,11 +730,12 @@ function getUserPosition() {
 }
 
 window.onload = function () {
-  document.getElementById("countrySelect").addEventListener("click", function () {
+  document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
     populateCityWeatherDropdown(cityDropdownForecast);
     populate5DaysByName();
+    getNewsData();
   });
   populateCountryDropdown();
   getUserPosition();

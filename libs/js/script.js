@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-
+console.log("testing");
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -608,7 +608,7 @@ let forecastWindSpeed = [];
 function getForecastData() {
   $.ajax({
     url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    type: "GET", // POST meaning that data is sent the php file(countryInfoApi.php)
     dataType: "json",
     data: {
       cityNames: cityName,

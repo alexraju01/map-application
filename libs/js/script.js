@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-console.log("testing1");
+console.log("testing2");
 let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -165,7 +165,7 @@ function selectCountryDropDown() {
 
   getCountryInfo(selectedCountry);
 }
-
+let currentOption;
 // // Function to handle geolocation
 function getUserCurrentCountry(latitude, longitude) {
   $.ajax({
@@ -181,17 +181,20 @@ function getUserCurrentCountry(latitude, longitude) {
       const countryName = result.data.countryName;
       console.log(`User is in ${countryName}`);
       const countrySelect = document.getElementById("countrySelect");
-      let exists = false;
       for (let i = 0; i < countrySelect.options.length; i++) {
         if (countrySelect.options[i].id === countryName) {
           console.log(countrySelect.options[i].id);
           console.log("match");
+          currentOption = i;
+          console.log(currentOption);
           countrySelect.selectedIndex = i;
-          exists = true;
+          selectCountryDropDown();
+          populateCityWeatherDropdown(cityWeatherDropdown);
+          populateCityWeatherDropdown(cityDropdownForecast);
+          populate5DaysByName();
           break;
         }
       }
-      console.log(countrySelect);
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
@@ -651,7 +654,7 @@ function getUserPosition() {
 }
 
 window.onload = function () {
-  document.getElementById("countrySelect").addEventListener("change", function () {
+  document.getElementById("countrySelect").addEventListener("click", function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
     populateCityWeatherDropdown(cityDropdownForecast);

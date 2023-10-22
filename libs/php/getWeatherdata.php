@@ -12,7 +12,6 @@ $executionStartTime = microtime(true);
 
 
 // Initialize CURL:
-https://api.openweathermap.org/data/2.5/weather?q=cosham,gb&appid=f60bdf556374ad06eba301b79765e1fa
 $api = 'https://api.openweathermap.org/data/2.5/weather?q='.$_REQUEST['cityNames'].','. $_REQUEST['countryCodes']. '&appid=f60bdf556374ad06eba301b79765e1fa';
 
 // Initialize a CURL session and set options to make the HTTP request

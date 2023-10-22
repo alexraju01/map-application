@@ -557,7 +557,7 @@ function getWeatherData() {
       ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
       $("#displayWeatherText").html(result.data.weather[0].description);
       $("#displayHumidity").html(result.data.main.humidity);
-      $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));
+      $("#displayTemperature").html(kelvinToCelsius(result.data.main.temp));
       $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
       $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
     },

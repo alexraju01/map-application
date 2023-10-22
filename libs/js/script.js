@@ -538,7 +538,7 @@ function kelvinToCelsius(kelvin) {
 
 function getWeatherData() {
   $.ajax({
-    url: "libs/php/getWeatherData.php", //  HTTP request is sent to this location
+    url: "libs/php/getWeathersInfo.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
     dataType: "json",
     data: {
@@ -607,7 +607,7 @@ let forecastTemp = [];
 let forecastWindSpeed = [];
 function getForecastData() {
   $.ajax({
-    url: "libs/php/getWeathersInfo.php", //  HTTP request is sent to this location
+    url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
     type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
     dataType: "json",
     data: {

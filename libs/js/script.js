@@ -547,7 +547,10 @@ function getWeatherData() {
     },
 
     success: function (result) {
+      console.log("testing input");
       console.log(result.data);
+      console.log("testing output");
+
       const weatherIcon = result.data.weather[0].icon;
       document.getElementById(
         "weatherIcon"

@@ -612,7 +612,7 @@ function getForecastData() {
     },
 
     success: function (result) {
-      const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
+      const forecastList = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
 
       forecastList.forEach((forecast) => {
         forecastHumidity.push(forecast.main.humidity);

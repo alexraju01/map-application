@@ -668,7 +668,7 @@ function getNewsData() {
       console.log(newsArticle.length);
       console.log(newsArticle);
       displayArticle(newsArticle);
-      // newsArticle.length = 0;
+      newsArticle.length = 0;
       // $("#displayNews").html(kelvinToCelsius(result.data.main.feels_like));
     },
     error: function (jqXHR, textStatus, errorThrown) {

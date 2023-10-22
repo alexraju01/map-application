@@ -101,7 +101,7 @@ function displayMapAndControls(lat, lng, zoom) {
     $("#weatherInfoModal").modal("show");
   }).addTo(map);
 
-  L.easyButton(" fa-cloud-sun fa-lg", function (btn, map) {
+  L.easyButton("fa-regular fa-newspaper fa-lg", function (btn, map) {
     $("#newsModal").modal("show");
   }).addTo(map);
 }
@@ -182,16 +182,13 @@ function getUserCurrentCountry(latitude, longitude) {
       lng: longitude,
     },
     success: function (result) {
-      console.log(result.data);
       const countryName = result.data.countryName;
       console.log(`User is in ${countryName}`);
       const countrySelect = document.getElementById("countrySelect");
       for (let i = 0; i < countrySelect.options.length; i++) {
         if (countrySelect.options[i].id === countryName) {
           console.log(countrySelect.options[i].id);
-          console.log("match");
           currentOption = i;
-          console.log(currentOption);
           countrySelect.selectedIndex = i;
           selectCountryDropDown();
           populateCityWeatherDropdown(cityWeatherDropdown);

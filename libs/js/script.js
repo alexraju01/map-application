@@ -608,7 +608,7 @@ let forecastWindSpeed = [];
 function getForecastData() {
   $.ajax({
     url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
-    type: "GET", // POST meaning that data is sent the php file(countryInfoApi.php)
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
     dataType: "json",
     data: {
       cityNames: cityName,

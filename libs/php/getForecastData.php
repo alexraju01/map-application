@@ -1,5 +1,3 @@
-
-
 <?php
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
@@ -7,12 +5,7 @@ error_reporting(E_ALL);
 // Initialize a timer to measure the execution time of the script:
 $executionStartTime = microtime(true);
 
-// API URL from geoname website, replace 'YOUR_USERNAME' with your actual username
-// $countryCode = $_REQUEST['countryCode'];
-
-
 // Initialize CURL:
-
 $api = 'https://api.openweathermap.org/data/2.5/forecast?q='.$_REQUEST['cityNames'].','.$_REQUEST['countryCodes'].'&appid=f60bdf556374ad06eba301b79765e1fa';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();

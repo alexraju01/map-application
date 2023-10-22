@@ -458,8 +458,6 @@ function convertCurrency() {
     },
 
     success: function (result) {
-      console.log(result.data);
-
       // Create an array of key-value pairs (country code and country name) from the object
     },
     error: function (jqXHR, textStatus, errorThrown) {
@@ -511,12 +509,12 @@ function populateCityWeatherDropdown(cityDropdown) {
 
         // console.log(encodedString);
         if (cityDropdown === cityWeatherDropdown) {
-          console.log("matches");
+          // console.log("matches");
           console.log(cityDropdown);
           getWeatherData();
         }
         if (cityDropdown === cityDropdownForecast) {
-          console.log("matches");
+          // console.log("matches");
           console.log(cityDropdownForecast);
           getForecastData();
         }
@@ -524,7 +522,7 @@ function populateCityWeatherDropdown(cityDropdown) {
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
-      console.log("fail");
+      console.log(jqXHR);
       console.log(textStatus);
       console.log(errorThrown);
     },
@@ -549,7 +547,7 @@ function getWeatherData() {
     },
 
     success: function (result) {
-      console.log(result.data);
+      // console.log(result.data);
       const weatherIcon = result.data.weather[0].icon;
       document.getElementById(
         "weatherIcon"
@@ -562,7 +560,7 @@ function getWeatherData() {
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
-      console.log("fail");
+      console.log(jqXHR);
       console.log(textStatus);
       console.log(errorThrown);
     },
@@ -586,7 +584,7 @@ function populateForecastField(humidity, temperature, windSpeed) {
     const tdElementHumidity = document.getElementById(`D${i}displayHumidity`);
     const tdElementTemperature = document.getElementById(`D${i}displayTemperature`);
     const tdElementWindSpeed = document.getElementById(`D${i}displayWindSpeed`);
-
+    // console.log(humidity);
     if (tdElementHumidity) {
       tdElementHumidity.textContent = humidity[i - 1];
     }
@@ -615,18 +613,21 @@ function getForecastData() {
 
     success: function (result) {
       const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
-      console.log(forecastList);
+
       forecastList.forEach((forecast) => {
         forecastHumidity.push(forecast.main.humidity);
         forecastTemp.push(forecast.main.temp);
         forecastWindSpeed.push(forecast.wind.speed);
-        populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
         // $("#D1displayLocation").html(forecast.main.temp);
       });
+      populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
+      forecastHumidity.length = 0;
+      forecastTemp.length = 0;
+      forecastWindSpeed.length = 0;
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
-      console.log("fail");
+      console.log(jqXHR);
       console.log(textStatus);
       console.log(errorThrown);
     },

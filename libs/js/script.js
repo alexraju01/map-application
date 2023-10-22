@@ -551,9 +551,9 @@ function getWeatherData() {
     success: function (result) {
       console.log(result.data);
       const weatherIcon = result.data.weather[0].icon;
-      // document.getElementById(
-      //   "weatherIcon"
-      // ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      document.getElementById(
+        "weatherIcon"
+      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
       $("#displayWeatherText").html(result.data.weather[0].description);
       $("#displayHumidity").html(result.data.main.humidity);
       $(".displayTemperature").html(kelvinToCelsius(result.data.main.temp));
@@ -615,7 +615,7 @@ function getForecastData() {
 
     success: function (result) {
       const forecastList = result.data.list.filter((item) => item.dt_txt.includes("00:00:00"));
-
+      console.log(forecastList);
       forecastList.forEach((forecast) => {
         forecastHumidity.push(forecast.main.humidity);
         forecastTemp.push(forecast.main.temp);
@@ -646,8 +646,8 @@ window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
-    populate5DaysByName();
     populateCityWeatherDropdown(cityDropdownForecast);
+    populate5DaysByName();
   });
   populateCountryDropdown();
   getUserLocation();

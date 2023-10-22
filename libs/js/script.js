@@ -656,5 +656,5 @@ window.onload = function () {
   });
   populateCountryDropdown();
   getUserLocation();
-  selectCountryDropDown();
+  // selectCountryDropDown();
 };

@@ -560,7 +560,8 @@ function getWeatherData() {
     },
     error: function (jqXHR, textStatus, errorThrown) {
       // your error code
-      console.log(jqXHR);
+      console.log(jqXHR.status);
+      console.log(jqXHR.responseText);
       console.log(textStatus);
       console.log(errorThrown);
     },

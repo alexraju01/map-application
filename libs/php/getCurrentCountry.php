@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 $executionStartTime = microtime(true);
 
 // API URL from geoname website, replace 'YOUR_USERNAME' with your actual username
-$api = 'http://api.geonames.org/countryInfoJSON?formatted=true&lang=en&country=' . $_REQUEST['country'] . '&username=alexraju&style=full';
+$api = 'http://api.geonames.org/countryCodeJSON?lat='.$_REQUEST['lat'].'&lng='. $_REQUEST['lng'].'&username=alexraju';
     
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
@@ -28,7 +28,7 @@ $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = $decode['geonames'];
+$output['data'] = $decode;
 
 // Set the response header to indicate that the response is in JSON format
 header('Content-Type: application/json; charset=UTF-8');

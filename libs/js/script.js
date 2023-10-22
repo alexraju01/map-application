@@ -121,6 +121,7 @@ function populateCountryDropdown() {
     const option = document.createElement("option");
     option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
     option.textContent = countryInfo.name; // Display both name and code
+    option.id = countryInfo.name;
     // Adding option element to dropdown
     dropdown.appendChild(option);
   });
@@ -166,23 +167,39 @@ function selectCountryDropDown() {
 }
 
 // // Function to handle geolocation
-function getUserLocation() {
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        let lat = position.coords.latitude;
-        let lng = position.coords.longitude;
-        // View the location of the current user on zoom level 14 # NOTE # maxZoom = 16
-        displayMapAndControls(lat, lng, 14);
-        // You can also use the user's location (lat and lng) for other purposes here
-      },
-      function (error) {
-        alert("Error: " + error.message);
+function getUserCurrentCountry(latitude, longitude) {
+  $.ajax({
+    url: "libs/php/getCurrentCountry.php", //  HTTP request is sent to this location
+    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
+    dataType: "json",
+    data: {
+      lat: latitude,
+      lng: longitude,
+    },
+    success: function (result) {
+      console.log(result.data);
+      const countryName = result.data.countryName;
+      console.log(`User is in ${countryName}`);
+      const countrySelect = document.getElementById("countrySelect");
+      let exists = false;
+      for (let i = 0; i < countrySelect.options.length; i++) {
+        if (countrySelect.options[i].id === countryName) {
+          console.log(countrySelect.options[i].id);
+          console.log("match");
+          countrySelect.selectedIndex = i;
+          exists = true;
+          break;
+        }
       }
-    );
-  } else {
-    alert("Geolocation is not available in your browser.");
-  }
+      console.log(countrySelect);
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      // your error code
+      console.log(jqXHR);
+      console.log(textStatus);
+      console.log(errorThrown);
+    },
+  });
 }
 let airports = [];
 let airportMarkerCluster; // Declare a variable to store the airport marker cluster
@@ -340,7 +357,7 @@ $("#nationalMarkerCheckbox").change(function () {
   }
 });
 
-//  ####### Get Country Info #########
+//  ############### Get Country Info #################
 function getCountryInfo(selectedCountry) {
   $.ajax({
     url: "libs/php/getCountryInfo.php", //  HTTP request is sent to this location
@@ -366,40 +383,6 @@ function getCountryInfo(selectedCountry) {
       console.log(errorThrown);
     },
   });
-}
-
-// Ignore this function for now not main functionailty
-function getUserCountry() {
-  // if ("geolocation" in navigator) {
-  //   navigator.geolocation.getCurrentPosition(
-  //     function (position) {
-  //       const latitude = position.coords.latitude;
-  //       const longitude = position.coords.longitude;
-  //       // Use a reverse geocoding service to determine the country
-  //       const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-  //       $.ajax({
-  //         url: geocodingUrl,
-  //         dataType: "json",
-  //         success: function (data) {
-  //           console.log("Passsssssss");
-  //           const userCountry = data.address.country;
-  //           console.log(userCountry);
-  //           return userCountry;
-  //         },
-  //         error: function (error) {
-  //           console.error("Error:", error);
-  //           $("#countryInfo").text("Could not determine your country.");
-  //         },
-  //       });
-  //     },
-  //     function (error) {
-  //       console.error("Geolocation error:", error);
-  //       $("#countryInfo").text("Could not determine your location.");
-  //     }
-  //   );
-  // } else {
-  //   $("#countryInfo").text("Geolocation is not supported by your browser.");
-  // }
 }
 
 // Get currencies
@@ -647,6 +630,26 @@ convertButton.addEventListener("click", function () {
 
 getCurrencies();
 
+function getUserPosition() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        let lat = position.coords.latitude;
+        let lng = position.coords.longitude;
+        getUserCurrentCountry(lat, lng);
+        // View the location of the current user on zoom level 14 # NOTE # maxZoom = 16
+        displayMapAndControls(lat, lng, 14);
+        // You can also use the user's location (lat and lng) for other purposes here
+      },
+      function (error) {
+        alert("Error: " + error.message);
+      }
+    );
+  } else {
+    alert("Geolocation is not available in your browser.");
+  }
+}
+
 window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
@@ -655,6 +658,6 @@ window.onload = function () {
     populate5DaysByName();
   });
   populateCountryDropdown();
-  getUserLocation();
+  getUserPosition();
   // selectCountryDropDown();
 };

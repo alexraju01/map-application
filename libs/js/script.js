@@ -1,11 +1,10 @@
 // Initialize the Leaflet map
-console.log("testing4");
-let streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const Streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 });
 
-let satellite = L.tileLayer(
+const Satellite = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   {
     attribution:
@@ -13,37 +12,52 @@ let satellite = L.tileLayer(
   }
 );
 
-let basemaps = {
-  Streets: streets,
-  Satellite: satellite,
+const basemaps = { Streets, Satellite };
+let isUserLocationVisible = true; // Used to store user current location
+let userMarker; // Array to store all the markers
+const markers = [];
+let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
+let selectedCountry;
+let countryCode;
+
+const fetchData = async (url, data = {}) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      $.ajax({
+        url,
+        type: "POST",
+        dataType: "json",
+        data,
+        success: resolve,
+        error: (_, __, errorThrown) => reject(errorThrown),
+      });
+    });
+    // Return the result
+    return result;
+  } catch (error) {
+    // Handle errors here
+    console.error(error);
+    throw error; // Re-throw the error if needed
+  }
 };
-
-// let air = updateAirportMarkers();
-// console.log(air);
-
-let isVisible = true;
-// This is used to store user current location
-let userMarker;
-// Array to store all the markerr #NOTE# (markers and marker) are 2 different variables
-let markers = [];
 
 function displayMapAndControls(lat, lng, zoom) {
   map = L.map("map", {
-    layers: [streets],
+    layers: [Streets],
   }).setView([lat, lng], zoom);
-  let layerControl = L.control.layers(basemaps).addTo(map);
+  L.control.layers(basemaps).addTo(map);
 
   // adding easy button
   L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
-    if (isVisible) {
+    if (isUserLocationVisible) {
       // storing the variable with user location using predefined
       userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
-      map.setView([lat, lng], 14);
+      map.setView([lat, lng], zoom);
     } else {
       // Remove the marker from the map
       map.removeLayer(userMarker);
     }
-    isVisible = !isVisible; // Toggle the marker's visibility state(true to false)
+    isUserLocationVisible = !isUserLocationVisible; // Toggle the marker's visibility state(true to false)
   }).addTo(map);
 
   // Function to check if the location exists in the markers array
@@ -106,9 +120,6 @@ function displayMapAndControls(lat, lng, zoom) {
   }).addTo(map);
 }
 
-let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
-let selectedCountry;
-let countryCode;
 function populateCountryDropdown() {
   // Extract country names and ISO Alpha-3 codes from the 'country' object
   const countryDetail = country.features.map((feature) => {
@@ -133,11 +144,9 @@ function populateCountryDropdown() {
 }
 
 function selectCountryDropDown() {
-  // getUserCountry();
-  countryOption = document.getElementById("countrySelect");
-  let selectedCountry = countryOption.value; // Get the selected country
+  const selectedCountry = document.getElementById("countrySelect").value; // Get the selected country
   // Find the GeoJSON data based on the selected country
-  let filteredCountry = country.features.find((feature) => {
+  const filteredCountry = country.features.find((feature) => {
     countryCode = selectedCountry;
     return feature.properties.iso_a2 === selectedCountry;
   });
@@ -172,94 +181,63 @@ function selectCountryDropDown() {
 }
 let currentOption;
 // // Function to handle geolocation
-function getUserCurrentCountry(latitude, longitude) {
-  $.ajax({
-    url: "libs/php/getCurrentCountry.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      lat: latitude,
-      lng: longitude,
-    },
-    success: function (result) {
-      const countryName = result.data.countryName;
-      console.log(`User is in ${countryName}`);
-      const countrySelect = document.getElementById("countrySelect");
-      for (let i = 0; i < countrySelect.options.length; i++) {
-        if (countrySelect.options[i].id === countryName) {
-          console.log(countrySelect.options[i].id);
-          currentOption = i;
-          countrySelect.selectedIndex = i;
-          selectCountryDropDown();
-          populateCityWeatherDropdown(cityWeatherDropdown);
-          populateCityWeatherDropdown(cityDropdownForecast);
-          populate5DaysByName();
-          getNewsData();
-          break;
-        }
+function getUserCurrentCountry(lat, lng) {
+  fetchData("libs/php/getCurrentCountry.php", { lat, lng }).then((result) => {
+    const { countryName } = result.data;
+    const countrySelect = document.getElementById("countrySelect");
+    for (let i = 0; i < countrySelect.options.length; i++) {
+      if (countrySelect.options[i].id === countryName) {
+        currentOption = i;
+        countrySelect.selectedIndex = i;
+        selectCountryDropDown();
+        populateCityWeatherDropdown(cityWeatherDropdown);
+        populateCityWeatherDropdown(cityDropdownForecast);
+        populate5DaysByName();
+        getNewsData();
+        break;
       }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log(jqXHR);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+    }
   });
 }
+
 let airports = [];
 let airportMarkerCluster; // Declare a variable to store the airport marker cluster
 // updates the airport marker
-function updateAirportMarkers(selectedCountry) {
+function updateAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
   clearAirportMarkers();
-  // fetch data from php file
-  $.ajax({
-    url: "libs/php/getCountries.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      // sends data about the two data parameter(country and language)
-      // the value of these data parmeter is determened by the value from
-      // the element id
-      airport: $("#airportMarkerCheckbox").val(),
-      country: selectedCountry,
-    },
-    success: function (result) {
-      if (airportMarkerCluster) {
-        airportMarkerCluster.clearLayers();
-      }
-      $.each(result.data, function (index, airport) {
-        const airportName = airport["asciiName"];
-        const airportLat = airport["lat"];
-        const airportLng = airport["lng"];
+  fetchData("libs/php/getCountries.php", {
+    airport: $("#airportMarkerCheckbox").val(),
+    country,
+  }).then((result) => {
+    if (airportMarkerCluster) {
+      airportMarkerCluster.clearLayers();
+    }
+    $.each(result.data, function (index, airport) {
+      const airportName = airport["asciiName"];
+      const airportLat = airport["lat"];
+      const airportLng = airport["lng"];
 
-        // Add the airport data to the 'airports' object with 'airportName' as the key
-        airports.push({
-          name: airportName,
-          lat: airportLat,
-          lng: airportLng,
-        });
+      // Add the airport data to the 'airports' object with 'airportName' as the key
+      airports.push({
+        name: airportName,
+        lat: airportLat,
+        lng: airportLng,
       });
-      // Create markers for each airport and add them to the markers array
-      const markers = airports.map((airport) => {
-        const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
-        return marker;
-      });
+    });
+    console.log(airports);
+    // Create markers for each airport and add them to the markers array
+    const markers = airports.map((airport) => {
+      const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
+      return marker;
+    });
 
-      // Create a marker cluster group for the airport markers
-      airportMarkerCluster = L.markerClusterGroup();
-      airportMarkerCluster.addLayers(markers);
+    // Create a marker cluster group for the airport markers
+    airportMarkerCluster = L.markerClusterGroup();
+    airportMarkerCluster.addLayers(markers);
 
-      // Add the airportMarkercluster to the map
-      map.addLayer(airportMarkerCluster);
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log("fail");
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+    // Add the airportMarkercluster to the map
+    map.addLayer(airportMarkerCluster);
   });
 }
 
@@ -272,6 +250,7 @@ function clearAirportMarkers() {
     // map.removeLayer(airportMarkerCluster);
   }
 }
+
 $("#airportMarkerCheckbox").change(function () {
   const isChecked = $(this).is(":checked");
   if (isChecked) {
@@ -293,52 +272,38 @@ function updateNationalMarkers(selectedCountry) {
   // Clear existing airport markers on the map, if there is any
   clearNationalMarkers();
   // fetch data from php file
-  $.ajax({
-    url: "libs/php/getNational.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      // sends data about the two data parameter(country and language)
-      // the value of these data parmeter is determened by the value from
-      // the element id
-      national: $("#nationalMarkerCheckbox").val(),
-      country: selectedCountry,
-    },
-    success: function (result) {
-      if (nationalMarkerCluster) {
-        nationalMarkerCluster.clearLayers();
-      }
-      $.each(result.data, function (index, national) {
-        const nationalName = national["asciiName"];
-        const nationalLat = national["lat"];
-        const nationalLng = national["lng"];
 
-        // Add the airport data to the 'airports' object with 'airportName' as the key
-        nationalPark.push({
-          name: nationalName,
-          lat: nationalLat,
-          lng: nationalLng,
-        });
+  fetchData("libs/php/getNational.php", {
+    national: $("#nationalMarkerCheckbox").val(),
+    country: selectedCountry,
+  }).then((result) => {
+    if (nationalMarkerCluster) {
+      nationalMarkerCluster.clearLayers();
+    }
+    $.each(result.data, function (index, national) {
+      const nationalName = national["asciiName"];
+      const nationalLat = national["lat"];
+      const nationalLng = national["lng"];
+
+      // Add the airport data to the 'airports' object with 'airportName' as the key
+      nationalPark.push({
+        name: nationalName,
+        lat: nationalLat,
+        lng: nationalLng,
       });
-      // Create markers for each airport and add them to the markers array
-      const markers = nationalPark.map((national) => {
-        const marker = L.marker([national.lat, national.lng]).bindPopup(national.name);
-        return marker;
-      });
+    });
+    // Create markers for each airport and add them to the markers array
+    const markers = nationalPark.map((national) => {
+      const marker = L.marker([national.lat, national.lng]).bindPopup(national.name);
+      return marker;
+    });
 
-      // Create a marker cluster group for the airport markers
-      nationalMarkerCluster = L.markerClusterGroup();
-      nationalMarkerCluster.addLayers(markers);
+    // Create a marker cluster group for the airport markers
+    nationalMarkerCluster = L.markerClusterGroup();
+    nationalMarkerCluster.addLayers(markers);
 
-      // Add the airportMarkercluster to the map
-      map.addLayer(nationalMarkerCluster);
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log("fail");
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+    // Add the airportMarkercluster to the map
+    map.addLayer(nationalMarkerCluster);
   });
 }
 
@@ -364,35 +329,16 @@ $("#nationalMarkerCheckbox").change(function () {
 });
 
 //  ############### Get Country Info #################
-function getCountryInfo(selectedCountry) {
-  $.ajax({
-    url: "libs/php/getCountryInfo.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      // sends data about the two data parameter(country and language)
-      // the value of these data parmeter is determened by the value from
-      // the element id
-      country: selectedCountry,
-    },
-    success: function (result) {
-      $("#displayCountryName").html(result["data"][0]["countryName"]);
-      $("#displayLang").html(result["data"][0]["languages"]);
-      $("#displayCapital").html(result["data"][0]["capital"]);
-      $("#displayContinet").html(result["data"][0]["continentName"]);
-      $("#displayPopulation").html(result["data"][0]["population"]);
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log("fail");
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+function getCountryInfo(country) {
+  fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
+    $("#displayCountryName").html(result["data"][0]["countryName"]);
+    $("#displayLang").html(result["data"][0]["languages"]);
+    $("#displayCapital").html(result["data"][0]["capital"]);
+    $("#displayContinet").html(result["data"][0]["continentName"]);
+    $("#displayPopulation").html(result["data"][0]["population"]);
   });
 }
 
-// Get currencies
-//  ####### Get Country Info #########
 function getCurrencies() {
   $.ajax({
     url: "libs/php/getCurrencies.php", //  HTTP request is sent to this location
@@ -409,7 +355,7 @@ function getCurrencies() {
       countryNameArray.sort((a, b) => {
         return a.country.localeCompare(b.country);
       });
-
+      // hhello amal
       $.each(countryNameArray, function (index, item) {
         // creating option html element for both from and to currency
         const optionFromCurrency = $("<option>", {
@@ -458,63 +404,46 @@ function convertCurrency() {
   });
 }
 
-let cityLat;
-let cityLng;
 let cityName;
 const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
 const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
 
 function populateCityWeatherDropdown(cityDropdown) {
-  $.ajax({
-    url: "libs/php/getCountryPlaceLatLng.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      country: $("#countrySelect").val(),
-    },
+  fetchData("libs/php/getCountryPlaceLatLng.php", {
+    country: $("#countrySelect").val(),
+  }).then((result) => {
+    const sortedPlaceData = result.data.sort((a, b) => a.toponymName.localeCompare(b.toponymName)); // Sort by place name
 
-    success: function (result) {
-      const sortedPlaceData = result.data.sort((a, b) =>
-        a.toponymName.localeCompare(b.toponymName)
-      ); // Sort by place name
+    cityDropdown.innerHTML = "";
+    sortedPlaceData.forEach((place) => {
+      placeName = place["toponymName"];
+      placeLat = place["lat"];
+      placeLng = place["lng"];
 
-      cityDropdown.innerHTML = "";
-      sortedPlaceData.forEach((place) => {
-        placeName = place["toponymName"];
-        placeLat = place["lat"];
-        placeLng = place["lng"];
+      const option = document.createElement("option");
+      option.value = `${placeLat},${placeLng}`; // Set the value to lat,lng
+      option.text = placeName; // Display the city name as the text
 
-        const option = document.createElement("option");
-        option.value = `${placeLat},${placeLng}`; // Set the value to lat,lng
-        option.text = placeName; // Display the city name as the text
+      cityDropdown.appendChild(option);
+    });
 
-        cityDropdown.appendChild(option);
-      });
+    cityDropdown.addEventListener("change", function () {
+      // //  the selected index retrievs the option element
+      const selectedOption = this.options[this.selectedIndex];
+      cityName = selectedOption.text.replace(" ", "%20");
 
-      cityDropdown.addEventListener("change", function () {
-        // //  the selected index retrievs the option element
-        const selectedOption = this.options[this.selectedIndex];
-        cityName = selectedOption.text.replace(" ", "%20");
-
-        // console.log(encodedString);
-        if (cityDropdown === cityWeatherDropdown) {
-          // console.log("matches");
-          console.log(cityDropdown);
-          getWeatherData();
-        }
-        if (cityDropdown === cityDropdownForecast) {
-          // console.log("matches");
-          console.log(cityDropdownForecast);
-          getForecastData();
-        }
-      });
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log(jqXHR);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+      // console.log(encodedString);
+      if (cityDropdown === cityWeatherDropdown) {
+        // console.log("matches");
+        console.log(cityDropdown);
+        getWeatherData();
+      }
+      if (cityDropdown === cityDropdownForecast) {
+        // console.log("matches");
+        console.log(cityDropdownForecast);
+        getForecastData();
+      }
+    });
   });
 }
 
@@ -526,37 +455,19 @@ function kelvinToCelsius(kelvin) {
 }
 
 function getWeatherData() {
-  $.ajax({
-    url: "libs/php/getWeatherData.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      cityNames: cityName,
-      countryCodes: countryCode,
-    },
-
-    success: function (result) {
-      console.log("testing input");
-      console.log(result.data);
-      console.log("testing output");
-
-      const weatherIcon = result.data.weather[0].icon;
-      document.getElementById(
-        "weatherIcon"
-      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
-      $("#displayWeatherText").html(result.data.weather[0].description);
-      $("#displayHumidity").html(result.data.main.humidity);
-      $("#displayTemperature").html(kelvinToCelsius(result.data.main.temp));
-      $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
-      $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log(jqXHR.status);
-      console.log(jqXHR.responseText);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+  fetchData("libs/php/getWeatherData.php", {
+    cityName,
+    countryCode,
+  }).then((result) => {
+    const weatherIcon = result.data.weather[0].icon;
+    document.getElementById(
+      "weatherIcon"
+    ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+    $("#displayWeatherText").html(result.data.weather[0].description);
+    $("#displayHumidity").html(result.data.main.humidity);
+    $("#displayTemperature").html(kelvinToCelsius(result.data.main.temp));
+    $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
+    $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
   });
 }
 
@@ -565,12 +476,11 @@ const week = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
 function populate5DaysByName() {
   for (let i = 1; i <= 5; i++) {
     const tdElementDays = document.getElementById(`displayDay${i}`);
-    if (tdElementDays) {
-      tdElementDays.textContent = week[i - 1];
-    }
+    tdElementDays && (tdElementDays.textContent = week[i - 1]);
   }
 }
-// ########## Populating humidity field
+
+// ########## Populating Forecast field
 function populateForecastField(humidity, temperature, windSpeed) {
   for (let i = 1; i <= 5; i++) {
     // D1displayHumidity;
@@ -595,114 +505,69 @@ let forecastHumidity = [];
 let forecastTemp = [];
 let forecastWindSpeed = [];
 function getForecastData() {
-  $.ajax({
-    url: "libs/php/getForecastData.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      cityNames: cityName,
-      countryCodes: countryCode,
-    },
+  fetchData("libs/php/getForecastData.php", {
+    cityName,
+    countryCode,
+  }).then((result) => {
+    const forecastList = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
 
-    success: function (result) {
-      const forecastList = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
-
-      forecastList.forEach((forecast) => {
-        forecastHumidity.push(forecast.main.humidity);
-        forecastTemp.push(forecast.main.temp);
-        forecastWindSpeed.push(forecast.wind.speed);
-        // $("#D1displayLocation").html(forecast.main.temp);
-      });
-      populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
-      forecastHumidity.length = 0;
-      forecastTemp.length = 0;
-      forecastWindSpeed.length = 0;
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log(jqXHR);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+    forecastList.forEach((forecast) => {
+      forecastHumidity.push(forecast.main.humidity);
+      forecastTemp.push(forecast.main.temp);
+      forecastWindSpeed.push(forecast.wind.speed);
+      // $("#D1displayLocation").html(forecast.main.temp);
+    });
+    populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
+    forecastHumidity.length = 0;
+    forecastTemp.length = 0;
+    forecastWindSpeed.length = 0;
   });
 }
 
 let convertButton = document.getElementById("convert");
 // Add a click event listener to the button
 convertButton.addEventListener("click", function () {
-  console.log("clicked");
   convertCurrency();
 });
 getCurrencies();
-let newsArticle = [];
-function getNewsData() {
-  $.ajax({
-    url: "libs/php/getNewsData.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      country: countryCode,
-    },
+let newsArticles = [];
 
-    success: function (result) {
-      console.log(result.data);
-      result.data.articles.forEach(function (article, index) {
-        // Display the article information
-        console.log(`Article ${index + 1}:`);
-        // console.log(`Title: ${article.title}`);
-        // console.log(`Author: ${article.source.name}`);
-        // console.log(`Description: ${article.publishedAt}`);
-        console.log("---");
-        console.log(article);
-        newsArticle.push({
-          num: index + 1,
-          title: article.title,
-          publishAt: article.publishedAt,
-          source: article.source.name,
-          url: article.url,
-        });
+function getNewsData() {
+  fetchData("libs/php/getNewsData.php", { countryCode }).then((result) => {
+    result.data.articles.forEach(function (article, index) {
+      const { title, publishedAt, url } = article;
+
+      newsArticles.push({
+        num: index + 1,
+        title,
+        publishedAt,
+        source: article.source.name,
+        url,
       });
-      console.log(newsArticle.length);
-      console.log(newsArticle);
-      displayArticle(newsArticle);
-      newsArticle.length = 0;
-      // $("#displayNews").html(kelvinToCelsius(result.data.main.feels_like));
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log(jqXHR);
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+    });
+    displayArticle(newsArticles);
+    newsArticles.length = 0;
   });
 }
 
-function displayArticle(article) {
-  for (let i = 0; i < article.length; i++) {
-    console.log(article[i].title);
-    const displayNewsNum = document.getElementById(`displayNewsNum${i + 1}`);
-    const displayNewsTitle = document.getElementById(`displayNewsTitle${i + 1}`);
-    const displayNewsPublishedAt = document.getElementById(`displayNewsPublishedAt${i + 1}`);
-    const displayNewsSource = document.getElementById(`displayNewsSource${i + 1}`);
-    const displayNewsUrl = document.getElementById(`displayNewsUrl${i + 1}`);
-    console.log(displayNewsPublishedAt);
-    console.log(article.displayNewsPublishedAt);
-    if (displayNewsNum) {
-      displayNewsNum.textContent = article[i].num;
-    }
-    if (displayNewsTitle) {
-      displayNewsTitle.textContent = article[i].title;
-    }
-    if (displayNewsPublishedAt) {
-      displayNewsPublishedAt.textContent = article[i].publishAt;
-      console.log(displayNewsPublishedAt);
-    }
-    if (displayNewsSource) {
-      displayNewsSource.textContent = article[i].source;
-    }
-    if (displayNewsUrl) {
-      displayNewsUrl.textContent = article[i].url;
-    }
+function displayArticle(articles) {
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+    const index = i + 1;
+
+    // Use template literals to generate element IDs
+    const displayNewsNum = document.getElementById(`displayNewsNum${index}`);
+    const displayNewsTitle = document.getElementById(`displayNewsTitle${index}`);
+    const displayNewsPublishedAt = document.getElementById(`displayNewsPublishedAt${index}`);
+    const displayNewsSource = document.getElementById(`displayNewsSource${index}`);
+    const displayNewsUrl = document.getElementById(`displayNewsUrl${index}`);
+
+    // Set the content for each element
+    displayNewsNum.textContent = article.num;
+    displayNewsTitle.textContent = article.title;
+    displayNewsPublishedAt.textContent = article.publishedAt;
+    displayNewsSource.textContent = article.source;
+    displayNewsUrl.textContent = article.url;
   }
 }
 

@@ -8,7 +8,7 @@ $executionStartTime = microtime(true);
 $userAgent = "mapApp/1.0"; // Replace with your application name and version
 
 // Initialize CURL:
-$api = 'https://newsapi.org/v2/top-headlines?pageSize=2&country='. $_REQUEST['country'].'&apiKey=a2263bc13916435698b966fe246e2f00';
+$api = 'https://newsapi.org/v2/top-headlines?pageSize=2&country='. $_REQUEST['countryCode'].'&apiKey=a2263bc13916435698b966fe246e2f00';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api);

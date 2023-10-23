@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 $executionStartTime = microtime(true);
 
 // Initialize CURL:
-$api = 'https://api.openweathermap.org/data/2.5/forecast?q='.$_REQUEST['cityNames'].','.$_REQUEST['countryCodes'].'&appid=f60bdf556374ad06eba301b79765e1fa';
+$api = 'https://api.openweathermap.org/data/2.5/forecast?q='.$_REQUEST['cityName'].','.$_REQUEST['countryCode'].'&appid=f60bdf556374ad06eba301b79765e1fa';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Ignore the SSL certification return a string

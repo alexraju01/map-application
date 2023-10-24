@@ -123,7 +123,7 @@
                 <label for="amount" id="amount" class="form-label">Amount:</label>
                 <input
                   type="number"
-                  id="amount"
+                  id="inputAmount"
                   class="form-control"
                   placeholder="Enter amount"
                   step="0.01"
@@ -143,7 +143,11 @@
                 </select>
               </div>
               <div class="mb-3">
-                <button type="button" id="convert" class="btn btn-success">Convert</button>
+                <label for="convertedAmount" class="form-label">Converted Amount:</label>
+                <div id="displayConvertedAmount">Amount will be displayed here</div>
+              </div>
+              <div class="mb-3">
+                <button type="button" id="convertAmount" class="btn btn-success">Convert</button>
               </div>
             </form>
           </div>
@@ -293,6 +297,15 @@
                   </tr>
 
                   <tr>
+                    <td><strong>Status</strong></td>
+                    <td><img src="" id="D1displayStatusIcon" alt="" width="50" /></td>
+                    <td><img src="" id="D2displayStatusIcon" alt="" width="50" /></td>
+                    <td><img src="" id="D3displayStatusIcon" alt="" width="50" /></td>
+                    <td><img src="" id="D4displayStatusIcon" alt="" width="50" /></td>
+                    <td><img src="" id="D5displayStatusIcon" alt="" width="50" /></td>
+                  </tr>
+
+                  <tr>
                     <td><strong>Humidity:</strong></td>
                     <td id="D1displayHumidity"></td>
                     <td id="D2displayHumidity"></td>
@@ -369,6 +382,59 @@
                     <a
                       href="#"
                       id="displayNewsUrl2"
+                      class="btn btn-link btn-sm w-100"
+                      target="_blank"
+                      >Read More</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="wikiSearchModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">Wiki Search Results</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="wiki-item card">
+                  <div class="card-body">
+                    <h5 id="displayWikiTitle1"></h5>
+                    <p id="displayWikiSummary1"></p>
+                    <a
+                      href="#"
+                      id="displayWikiUrl1"
+                      class="btn btn-link btn-sm w-100"
+                      target="_blank"
+                      >Read More</a
+                    >
+                  </div>
+                </div>
+                <div class="wiki-item card">
+                  <div class="card-body">
+                    <h5 id="displayWikiTitle2"></h5>
+                    <p id="displayWikiSummary2"></p>
+                    <a
+                      href="#"
+                      id="displayWikiUrl2"
                       class="btn btn-link btn-sm w-100"
                       target="_blank"
                       >Read More</a

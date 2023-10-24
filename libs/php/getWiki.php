@@ -6,16 +6,8 @@ error_reporting(E_ALL);
 $executionStartTime = microtime(true);
 
 // API URL from geoname website, replace 'YOUR_USERNAME' with your actual username
-// $countryCode = $_REQUEST['countryCode'];
-$endpoint = 'convert';
-$access_key = 'e775d43e5167919afdddf8ec7c4d7b71';
-
-// Initialize CURL:
-
-// $ch = curl_init('https://api.exchangeratesapi.io/v1/'.$endpoint.'?access_key='.$access_key.'');
-// $api = 'http://api.geonames.org/neighboursJSON?formatted=true&country=' . $_REQUEST['country'] . '&username=alexraju&style=full';
-$api = 'https://api.exchangeratesapi.io/v1/'.$endpoint.'?access_key='.$access_key.'&from=' . $_REQUEST['from'] .'&to=' . $_REQUEST['to'] .'&amount=' . $_REQUEST['amount'] .''; 
-
+$api = 'http://api.geonames.org/wikipediaSearchJSON?formatted=true&q='.$_REQUEST['country'].'&maxRows=2&username=alexraju&style=full';
+    
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Ignore the SSL certification return a string
@@ -36,7 +28,7 @@ $output['status']['code'] = "200";
 $output['status']['name'] = "ok";
 $output['status']['description'] = "success";
 $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-$output['data'] = $decode;
+$output['data'] = $decode['geonames'];
 
 // Set the response header to indicate that the response is in JSON format
 header('Content-Type: application/json; charset=UTF-8');

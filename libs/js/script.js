@@ -118,6 +118,10 @@ function displayMapAndControls(lat, lng, zoom) {
   L.easyButton("fa-regular fa-newspaper fa-lg", function (btn, map) {
     $("#newsModal").modal("show");
   }).addTo(map);
+
+  L.easyButton("fa-brands fa-wikipedia-w fa-lg", function (btn, map) {
+    $("#wikiSearchModal").modal("show");
+  }).addTo(map);
 }
 
 function populateCountryDropdown() {
@@ -178,6 +182,7 @@ function selectCountryDropDown() {
   }
 
   getCountryInfo(selectedCountry);
+  getWikiCountry(filteredCountry.properties.name);
 }
 let currentOption;
 // // Function to handle geolocation
@@ -338,71 +343,64 @@ function getCountryInfo(country) {
     $("#displayPopulation").html(result["data"][0]["population"]);
   });
 }
+// ############# Currency #############
+function getCountryCurrencies() {
+  fetchData("libs/php/getCurrencies.php").then((result) => {
+    // Create an array of key-value pairs (country code and country name) from the object
+    const countryNameArray = $.map(result.data, function (country, currencyCode) {
+      return { currencyCode: currencyCode, country: country };
+    });
 
-function getCurrencies() {
-  $.ajax({
-    url: "libs/php/getCurrencies.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
+    // Sort the array by country name
+    countryNameArray.sort((a, b) => {
+      return a.country.localeCompare(b.country);
+    });
 
-    success: function (result) {
-      // Create an array of key-value pairs (country code and country name) from the object
-      const countryNameArray = $.map(result.data, function (country, currencyCode) {
-        return { currencyCode: currencyCode, country: country };
+    $.each(countryNameArray, function (index, item) {
+      // creating option html element for both from and to currency
+      const optionFromCurrency = $("<option>", {
+        value: item.currencyCode,
+        text: `${item.country} (${item.currencyCode})`,
+      });
+      const optionToCurrency = $("<option>", {
+        value: item.currencyCode,
+        text: `${item.country} (${item.currencyCode})`,
       });
 
-      // Sort the array by country name
-      countryNameArray.sort((a, b) => {
-        return a.country.localeCompare(b.country);
-      });
-      // hhello amal
-      $.each(countryNameArray, function (index, item) {
-        // creating option html element for both from and to currency
-        const optionFromCurrency = $("<option>", {
-          value: item.currencyCode,
-          text: `${item.country} (${item.currencyCode})`,
-        });
-        const optionToCurrency = $("<option>", {
-          value: item.currencyCode,
-          text: `${item.country} (${item.currencyCode})`,
-        });
+      // adding the option to the dropdown
+      $("#fromCurrency").append(optionFromCurrency);
+      $("#toCurrency").append(optionToCurrency);
+    });
+  });
+}
+function getCurrencyRates() {
+  fetchData("libs/js/rates.json").then((result) => {
+    $("#convertAmount").on("click", () => {
+      const fromCurrency = $("#fromCurrency").val();
+      const toCurrency = $("#toCurrency").val();
+      const amount = parseFloat($("#inputAmount").val());
+      const displayConvertedAmount = $("#displayConvertedAmount");
 
-        // adding the option to the dropdown
-        $("#fromCurrency").append(optionFromCurrency);
-        $("#toCurrency").append(optionToCurrency);
-      });
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log("fail");
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
+      if (result.rates[fromCurrency] && result.rates[toCurrency]) {
+        const calculateExchangeRate = result.rates[fromCurrency] / result.rates[toCurrency];
+        const convertedAmount = amount / calculateExchangeRate;
+        displayConvertedAmount.text(
+          `${amount} in ${fromCurrency} = ${convertedAmount} in ${toCurrency}`
+        );
+      } else {
+        displayConvertedAmount.text(
+          `Exchange rates not found for ${fromCurrency} and ${toCurrency}.`
+        );
+      }
+    });
   });
 }
 
-function convertCurrency() {
-  $.ajax({
-    url: "libs/php/convertCurrency.php", //  HTTP request is sent to this location
-    type: "POST", // POST meaning that data is sent the php file(countryInfoApi.php)
-    dataType: "json",
-    data: {
-      amount: $("#amount").val(),
-      from: $("#fromCurrency").val(),
-      to: $("#toCurrency").val(),
-    },
-
-    success: function (result) {
-      // Create an array of key-value pairs (country code and country name) from the object
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      // your error code
-      console.log("fail");
-      console.log(textStatus);
-      console.log(errorThrown);
-    },
-  });
-}
+let convertButton = document.getElementById("convertAmount");
+// Add a click event listener to the button
+convertButton.addEventListener("click", function () {
+  getCurrencyRates();
+});
 
 let cityName;
 const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
@@ -413,7 +411,6 @@ function populateCityWeatherDropdown(cityDropdown) {
     country: $("#countrySelect").val(),
   }).then((result) => {
     const sortedPlaceData = result.data.sort((a, b) => a.toponymName.localeCompare(b.toponymName)); // Sort by place name
-
     cityDropdown.innerHTML = "";
     sortedPlaceData.forEach((place) => {
       placeName = place["toponymName"];
@@ -481,17 +478,21 @@ function populate5DaysByName() {
 }
 
 // ########## Populating Forecast field
-function populateForecastField(humidity, temperature, windSpeed) {
+function populateForecastField(icon, humidity, temperature, windSpeed) {
+  console.log(icon);
   for (let i = 1; i <= 5; i++) {
-    // D1displayHumidity;
+    const tdElementIcon = document.getElementById(`D${i}displayStatusIcon`);
     const tdElementHumidity = document.getElementById(`D${i}displayHumidity`);
     const tdElementTemperature = document.getElementById(`D${i}displayTemperature`);
     const tdElementWindSpeed = document.getElementById(`D${i}displayWindSpeed`);
     // console.log(humidity);
+
+    if (tdElementIcon) {
+      tdElementIcon.src = `https://openweathermap.org/img/wn/${icon[i - 1]}@2x.png`;
+    }
     if (tdElementHumidity) {
       tdElementHumidity.textContent = humidity[i - 1];
     }
-
     if (tdElementTemperature) {
       tdElementTemperature.textContent = kelvinToCelsius(temperature[i - 1]);
     }
@@ -504,34 +505,32 @@ function populateForecastField(humidity, temperature, windSpeed) {
 let forecastHumidity = [];
 let forecastTemp = [];
 let forecastWindSpeed = [];
+let forecastIcon = [];
 function getForecastData() {
   fetchData("libs/php/getForecastData.php", {
     cityName,
     countryCode,
   }).then((result) => {
+    console.log(result.data);
     const forecastList = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
 
     forecastList.forEach((forecast) => {
       forecastHumidity.push(forecast.main.humidity);
       forecastTemp.push(forecast.main.temp);
       forecastWindSpeed.push(forecast.wind.speed);
+      forecastIcon.push(forecast.weather[0].icon);
       // $("#D1displayLocation").html(forecast.main.temp);
     });
-    populateForecastField(forecastHumidity, forecastTemp, forecastWindSpeed);
+    console.log(forecastList);
+    populateForecastField(forecastIcon, forecastHumidity, forecastTemp, forecastWindSpeed);
     forecastHumidity.length = 0;
     forecastTemp.length = 0;
     forecastWindSpeed.length = 0;
+    forecastIcon.length = 0;
   });
 }
 
-let convertButton = document.getElementById("convert");
-// Add a click event listener to the button
-convertButton.addEventListener("click", function () {
-  convertCurrency();
-});
-getCurrencies();
 let newsArticles = [];
-
 function getNewsData() {
   fetchData("libs/php/getNewsData.php", { countryCode }).then((result) => {
     result.data.articles.forEach(function (article, index) {
@@ -563,11 +562,44 @@ function displayArticle(articles) {
     const displayNewsUrl = document.getElementById(`displayNewsUrl${index}`);
 
     // Set the content for each element
-    displayNewsNum.textContent = article.num;
-    displayNewsTitle.textContent = article.title;
-    displayNewsPublishedAt.textContent = article.publishedAt;
-    displayNewsSource.textContent = article.source;
-    displayNewsUrl.textContent = article.url;
+    displayNewsNum.textContent = `Article: ${article.num}`;
+    displayNewsTitle.textContent = `Title: ${article.title}`;
+    displayNewsPublishedAt.textContent = `Published: ${article.publishedAt}`;
+    displayNewsSource.textContent = `Source: ${article.source}`;
+    displayNewsUrl.textContent = `Link: ${article.url.slice(0, 27)}`;
+    displayNewsUrl.href = article.url;
+  }
+}
+
+const wikiInfos = [];
+function getWikiCountry(countryName) {
+  countryName = countryName.replace(" ", "%20");
+  fetchData("libs/php/getWiki.php", { country: countryName }).then((result) => {
+    result.data.forEach((wiki, index) => {
+      const { title, summary, wikipediaUrl } = wiki;
+
+      wikiInfos.push({
+        title,
+        summary,
+        wikipediaUrl,
+      });
+    });
+    displayWikiInfo(wikiInfos);
+    wikiInfos.length = 0;
+  });
+}
+
+function displayWikiInfo(wikiInfos) {
+  for (let i = 0; i < wikiInfos.length; i++) {
+    const elemDisplayWikiTitle = $(`#displayWikiTitle${i + 1}`);
+    const elemDisplayWikiSummary = $(`#displayWikiSummary${i + 1}`);
+    const elemDisplayWikiUrl = $(`#displayWikiUrl${i + 1}`);
+
+    elemDisplayWikiTitle.text(wikiInfos[i].title);
+    elemDisplayWikiSummary.text(wikiInfos[i].summary);
+    elemDisplayWikiUrl.attr("href", `https://${wikiInfos[i].wikipediaUrl}`);
+
+    console.log(elemDisplayWikiUrl);
   }
 }
 
@@ -601,5 +633,7 @@ window.onload = function () {
   });
   populateCountryDropdown();
   getUserPosition();
+  getCountryCurrencies();
+  getCurrencyRates();
   // selectCountryDropDown();
 };

@@ -573,7 +573,7 @@ function displayArticle(articles) {
 
 const wikiInfos = [];
 function getWikiCountry(countryName) {
-  countryName = countryName.replace(" ", "%20");
+  countryName = countryName.replace(" ", "");
   fetchData("libs/php/getWiki.php", { country: countryName }).then((result) => {
     result.data.forEach((wiki, index) => {
       const { title, summary, wikipediaUrl } = wiki;
@@ -635,5 +635,4 @@ window.onload = function () {
   getUserPosition();
   getCountryCurrencies();
   getCurrencyRates();
-  // selectCountryDropDown();
 };

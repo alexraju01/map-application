@@ -1,4 +1,5 @@
 // Initialize the Leaflet map
+console.log("h1");
 const Streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -45,7 +46,7 @@ function displayMapAndControls(lat, lng, zoom) {
   map = L.map("map", {
     layers: [Streets],
   }).setView([lat, lng], zoom);
-  L.control.layers(basemaps).addTo(map);
+  L.control.layers(basemaps, overlayMaps).addTo(map);
 
   // adding easy button
   L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
@@ -165,14 +166,15 @@ function selectCountryDropDown() {
 
   // Zoom out to the bounds of the selected country
   map.fitBounds(selectedCountryLayer.getBounds());
+  updateAirportMarkers(selectedCountry);
 
   // Check if the checkbox is checked, and if it is, load airport markers
-  if ($("#airportMarkerCheckbox").is(":checked")) {
-    updateAirportMarkers(selectedCountry);
-  } else {
-    // If the checkbox is unchecked, remove the airport markers
-    clearAirportMarkers();
-  }
+  // if ($("#airportMarkerCheckbox").is(":checked")) {
+  //   updateAirportMarkers(selectedCountry);
+  // } else {
+  //   // If the checkbox is unchecked, remove the airport markers
+  //   clearAirportMarkers();
+  // }
 
   if ($("#nationalMarkerCheckbox").is(":checked")) {
     updateNationalMarkers(selectedCountry);
@@ -206,18 +208,16 @@ function getUserCurrentCountry(lat, lng) {
 }
 
 let airports = [];
-let airportMarkerCluster; // Declare a variable to store the airport marker cluster
-// updates the airport marker
+var airportCluster = L.markerClusterGroup();
+
 function updateAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
-  clearAirportMarkers();
+  airportCluster.clearLayers();
+
   fetchData("libs/php/getCountries.php", {
     airport: $("#airportMarkerCheckbox").val(),
     country,
   }).then((result) => {
-    if (airportMarkerCluster) {
-      airportMarkerCluster.clearLayers();
-    }
     $.each(result.data, function (index, airport) {
       const airportName = airport["asciiName"];
       const airportLat = airport["lat"];
@@ -229,13 +229,18 @@ function updateAirportMarkers(country) {
         lat: airportLat,
         lng: airportLng,
       });
+      var airportMarker = L.marker([parseFloat(airportLat), parseFloat(airportLng)]).bindPopup(
+        airportName
+      );
+      airportCluster.addLayer(airportMarker);
     });
-    console.log(airports);
+    map.addLayer(airportCluster);
+    console.log(airportCluster);
     // Create markers for each airport and add them to the markers array
-    const markers = airports.map((airport) => {
-      const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
-      return marker;
-    });
+    // const markers = airports.map((airport) => {
+    //   const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
+    //   return marker;
+    // });
 
     // Create a marker cluster group for the airport markers
     airportMarkerCluster = L.markerClusterGroup();
@@ -246,15 +251,19 @@ function updateAirportMarkers(country) {
   });
 }
 
-function clearAirportMarkers() {
-  if (airportMarkerCluster) {
-    // clears the airport marker cluster layer
-    airportMarkerCluster.clearLayers();
-    //This emptys the string.
-    airports.length = 0;
-    // map.removeLayer(airportMarkerCluster);
-  }
-}
+var overlayMaps = {
+  Airports: airportCluster,
+};
+
+// function clearAirportMarkers() {
+//   if (airportMarkerCluster) {
+//     // clears the airport marker cluster layer
+//     airportMarkerCluster.clearLayers();
+//     //This emptys the string.
+//     airports.length = 0;
+//     // map.removeLayer(airportMarkerCluster);
+//   }
+// }
 
 $("#airportMarkerCheckbox").change(function () {
   const isChecked = $(this).is(":checked");

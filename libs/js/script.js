@@ -177,6 +177,7 @@ function selectCountryDropDown() {
 
   // Zoom out to the bounds of the selected country
   map.fitBounds(selectedCountryLayer.getBounds());
+  // clearAirportMarkers();
   placeAirportMarkers(selectedCountry);
   placeNationalMarkers(selectedCountry);
   getCountryInfo(selectedCountry);
@@ -195,7 +196,6 @@ function getUserCurrentCountry(lat, lng) {
         selectCountryDropDown();
         populateCityWeatherDropdown(cityWeatherDropdown);
         populateCityWeatherDropdown(cityDropdownForecast);
-        populate5DaysByName();
         getNewsData();
         break;
       }
@@ -206,8 +206,6 @@ function getUserCurrentCountry(lat, lng) {
 let airportMarkerCluster = L.markerClusterGroup();
 function placeAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
-  console.log(airportMarkerCluster);
-
   airportMarkerCluster.clearLayers();
 
   fetchData("libs/php/getCountries.php", {
@@ -225,19 +223,11 @@ function placeAirportMarkers(country) {
       airportMarkerCluster.addLayer(airportMarker);
     });
     map.addLayer(airportMarkerCluster);
-    console.log(airportMarkerCluster);
-
-    // Create a marker cluster group for the airport markers
-    airportMarkerCluster = L.markerClusterGroup();
-    airportMarkerCluster.addLayers(markers);
-
-    // Add the airportMarkercluster to the map
-    map.addLayer(airportMarkerCluster);
   });
 }
 
 // ############################### Capital City #############################################
-let nationalPark = [];
+// let nationalPark = [];
 let nationalMarkerCluster = L.markerClusterGroup();
 
 // updates the airport marker
@@ -256,13 +246,10 @@ function placeNationalMarkers(selectedCountry) {
       const nationalLng = national["lng"];
 
       const nationalParkMarker = L.marker([parseFloat(nationalLat), parseFloat(nationalLng)], {
-        icon: renderMarkerIcon("img/nationalIcon.png", [60, 60], [25, 5], [4, 3]),
+        icon: renderMarkerIcon("img/nationalIcon.png", [60, 60], [25], [4, 3]),
       }).bindPopup(nationalName);
       nationalMarkerCluster.addLayers(nationalParkMarker);
     });
-    // Create a marker cluster group for the airport markers
-    // nationalMarkerCluster = L.markerClusterGroup();
-    // Add the airportMarkercluster to the map
     map.addLayer(nationalMarkerCluster);
   });
 }
@@ -407,65 +394,51 @@ function getWeatherData() {
   });
 }
 
-const week = ["Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"];
-// ########### Populating the field title by days of the week  #############
-function populate5DaysByName() {
-  for (let i = 1; i <= 5; i++) {
-    const tdElementDays = document.getElementById(`displayDay${i}`);
-    tdElementDays && (tdElementDays.textContent = week[i - 1]);
-  }
-}
-
 // ########## Populating Forecast field
-function populateForecastField(icon, humidity, temperature, windSpeed) {
-  console.log(icon);
-  for (let i = 1; i <= 5; i++) {
-    const tdElementIcon = document.getElementById(`D${i}displayStatusIcon`);
-    const tdElementHumidity = document.getElementById(`D${i}displayHumidity`);
-    const tdElementTemperature = document.getElementById(`D${i}displayTemperature`);
-    const tdElementWindSpeed = document.getElementById(`D${i}displayWindSpeed`);
-    // console.log(humidity);
+function populateForecastField(forecastList) {
+  for (let i = 0; i < forecastList.length; i++) {
+    const $tdElementDays = $(`#displayDay${i + 1}`);
+    const $tdElementIcon = $(`#D${i + 1}displayStatusIcon`);
+    const $tdElementHumidity = $(`#D${i + 1}displayHumidity`);
+    const $tdElementTemperature = $(`#D${i + 1}displayTemperature`);
+    const $tdElementWindSpeed = $(`#D${i + 1}displayWindSpeed`);
 
-    if (tdElementIcon) {
-      tdElementIcon.src = `https://openweathermap.org/img/wn/${icon[i - 1]}@2x.png`;
-    }
-    if (tdElementHumidity) {
-      tdElementHumidity.textContent = humidity[i - 1];
-    }
-    if (tdElementTemperature) {
-      tdElementTemperature.textContent = kelvinToCelsius(temperature[i - 1]);
-    }
-    if (tdElementWindSpeed) {
-      tdElementWindSpeed.textContent = `${windSpeed[i - 1]} mph`;
-    }
+    // converting string base date time to days e.g. 2023-10-25 12:00:00 => wed
+    const date = new Date(forecastList[i].date);
+    const dayOfWeek = date.toLocaleDateString("en-US", {
+      weekday: "short",
+    });
+
+    $tdElementDays.text(dayOfWeek);
+    $tdElementIcon.attr("src", `https://openweathermap.org/img/wn/${forecastList[i].icon}@2x.png`);
+    $tdElementHumidity.text(forecastList[i].humidity);
+    $tdElementTemperature.text(kelvinToCelsius(forecastList[i].temperature));
+    $tdElementWindSpeed.text(`${forecastList[i].windSpeed} mph`);
   }
 }
 
-let forecastHumidity = [];
-let forecastTemp = [];
-let forecastWindSpeed = [];
-let forecastIcon = [];
+let forecastList = [];
 function getForecastData() {
   fetchData("libs/php/getForecastData.php", {
     cityName,
     countryCode,
   }).then((result) => {
     console.log(result.data);
-    const forecastList = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
+    // this gets the list of data for 5 days at midday(12:00:00)
+    const forecastItems = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
 
-    forecastList.forEach((forecast) => {
-      forecastHumidity.push(forecast.main.humidity);
-      forecastTemp.push(forecast.main.temp);
-      forecastWindSpeed.push(forecast.wind.speed);
-      forecastIcon.push(forecast.weather[0].icon);
-      // $("#D1displayLocation").html(forecast.main.temp);
+    forecastItems.forEach((forecast) => {
+      forecastList.push({
+        date: forecast.dt_txt,
+        icon: forecast.weather[0].icon,
+        humidty: forecast.main.humidity,
+        temperature: forecast.main.temp,
+        windSpeed: forecast.wind.speed,
+      });
     });
-    console.log(forecastList);
-    populateForecastField(forecastIcon, forecastHumidity, forecastTemp, forecastWindSpeed);
-    forecastHumidity.length = 0;
-    forecastTemp.length = 0;
-    forecastWindSpeed.length = 0;
-    forecastIcon.length = 0;
+
+    populateForecastField(forecastList);
+    forecastList.length = 0;
   });
 }
 
@@ -567,7 +540,6 @@ window.onload = function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
     populateCityWeatherDropdown(cityDropdownForecast);
-    populate5DaysByName();
     getNewsData();
   });
   populateCountryDropdown();

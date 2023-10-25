@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-console.log("h4");
+
 const Streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -27,7 +27,7 @@ function renderMarkerIcon(iconUrl, iconSize, iconAnchor, popupAnchor) {
 const basemaps = { Streets, Satellite };
 let isUserLocationVisible = true; // Used to store user current location
 let userMarker; // Array to store all the markers
-const markers = [];
+let markers = [];
 let selectedCountryLayer; // Declare a variable to keep track of the selected country layer
 let selectedCountry;
 let countryCode;
@@ -52,12 +52,12 @@ const fetchData = async (url, data = {}) => {
     throw error; // Re-throw the error if needed
   }
 };
-
+// ########### Rending map, buttons, control layers, and markers
 function displayMapAndControls(lat, lng, zoom) {
   map = L.map("map", {
     layers: [Streets],
   }).setView([lat, lng], zoom);
-  L.control.layers(basemaps, overlayMaps).addTo(map);
+  L.control.layers(basemaps, overlayMarker).addTo(map);
 
   // adding easy button
   L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
@@ -83,7 +83,7 @@ function displayMapAndControls(lat, lng, zoom) {
 
   // Function to handle left-click
   map.on("click", (e) => {
-    //  0 = left mouse button
+    // 0 = left mouse button
     if (e.originalEvent.button === 0) {
       // Left-click: Check if a marker already exists at the clicked location
       if (locationExists(e.latlng)) {
@@ -92,21 +92,15 @@ function displayMapAndControls(lat, lng, zoom) {
       // Create a new marker and add it to the map and the markers array
       var customLabel = prompt("Enter a label for the marker:");
       if (customLabel) {
-        let marker = L.marker(e.latlng)
-          .addTo(map)
-          .bindPopup(customLabel + " Right click to remove");
+        let marker = L.marker(e.latlng).addTo(map).bindPopup(customLabel);
         markers.push(marker);
-      }
-    }
-  });
 
-  // Function to handle right-click
-  // ###### NEED TO KNOW WHAT "CONTEXTMENU" ######
-  map.on("contextmenu", (e) => {
-    // Right-click: Remove the last marker from the map and the markers array
-    if (markers.length > 0) {
-      let lastMarker = markers.pop();
-      map.removeLayer(lastMarker);
+        // Add a context menu to the marker for removing
+        marker.on("contextmenu", () => {
+          map.removeLayer(marker);
+          markers = markers.filter((m) => m !== marker);
+        });
+      }
     }
   });
 
@@ -132,6 +126,48 @@ function displayMapAndControls(lat, lng, zoom) {
   }).addTo(map);
 }
 
+// ################### Renders The Map Near User Location ##############################
+function getUserPosition() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        let lat = position.coords.latitude;
+        let lng = position.coords.longitude;
+        getUserCurrentCountry(lat, lng);
+        // View the location of the current user on zoom level 14 # NOTE # maxZoom = 16
+        displayMapAndControls(lat, lng, 14);
+        // You can also use the user's location (lat and lng) for other purposes here
+      },
+      function (error) {
+        alert("Error: " + error.message);
+      }
+    );
+  } else {
+    alert("Geolocation is not available in your browser.");
+  }
+}
+
+// ############### Auto slects the country box #####################
+let currentOption;
+function getUserCurrentCountry(lat, lng) {
+  fetchData("libs/php/getCurrentCountry.php", { lat, lng }).then((result) => {
+    const { countryName } = result.data;
+    const countrySelect = document.getElementById("countrySelect");
+    for (let i = 0; i < countrySelect.options.length; i++) {
+      if (countrySelect.options[i].id === countryName) {
+        currentOption = i;
+        countrySelect.selectedIndex = i;
+        selectCountryDropDown();
+        populateCityWeatherDropdown(cityWeatherDropdown);
+        populateCityWeatherDropdown(cityDropdownForecast);
+        getNewsData();
+        break;
+      }
+    }
+  });
+}
+
+// ################# Populate dropdown using json file ############################3
 function populateCountryDropdown() {
   // Extract country names and ISO Alpha-3 codes from the 'country' object
   const countryDetail = country.features.map((feature) => {
@@ -154,7 +190,7 @@ function populateCountryDropdown() {
     dropdown.appendChild(option);
   });
 }
-
+// ############### Selecting country and updating the modals of that country ###########################
 function selectCountryDropDown() {
   const selectedCountry = document.getElementById("countrySelect").value; // Get the selected country
   // Find the GeoJSON data based on the selected country
@@ -173,32 +209,24 @@ function selectCountryDropDown() {
 
   // Zoom out to the bounds of the selected country
   map.fitBounds(selectedCountryLayer.getBounds());
-  // clearAirportMarkers();
   placeAirportMarkers(selectedCountry);
   placeNationalMarkers(selectedCountry);
   getCountryInfo(selectedCountry);
   getWikiCountry(filteredCountry.properties.name);
 }
-let currentOption;
-// // Function to handle geolocation
-function getUserCurrentCountry(lat, lng) {
-  fetchData("libs/php/getCurrentCountry.php", { lat, lng }).then((result) => {
-    const { countryName } = result.data;
-    const countrySelect = document.getElementById("countrySelect");
-    for (let i = 0; i < countrySelect.options.length; i++) {
-      if (countrySelect.options[i].id === countryName) {
-        currentOption = i;
-        countrySelect.selectedIndex = i;
-        selectCountryDropDown();
-        populateCityWeatherDropdown(cityWeatherDropdown);
-        populateCityWeatherDropdown(cityDropdownForecast);
-        getNewsData();
-        break;
-      }
-    }
+
+//  ############### Get Country Info #################
+function getCountryInfo(country) {
+  fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
+    $("#displayCountryName").html(result["data"][0]["countryName"]);
+    $("#displayLang").html(result["data"][0]["languages"]);
+    $("#displayCapital").html(result["data"][0]["capital"]);
+    $("#displayContinet").html(result["data"][0]["continentName"]);
+    $("#displayPopulation").html(result["data"][0]["population"]);
   });
 }
 
+// ############################### Creating Airport Markers #############################################
 let airportMarkerCluster = L.markerClusterGroup();
 function placeAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
@@ -222,16 +250,13 @@ function placeAirportMarkers(country) {
   });
 }
 
-// ############################### Capital City #############################################
-// let nationalPark = [];
+// ############################### Creating National Park Markers #############################################
 let nationalMarkerCluster = L.markerClusterGroup();
-
 // updates the airport marker
 function placeNationalMarkers(selectedCountry) {
   // Clear existing airport markers on the map
   nationalMarkerCluster.clearLayers();
 
-  // fetch data from php file
   fetchData("libs/php/getNational.php", {
     national: $("#nationalMarkerCheckbox").val(),
     country: selectedCountry,
@@ -249,24 +274,14 @@ function placeNationalMarkers(selectedCountry) {
     map.addLayer(nationalMarkerCluster);
   });
 }
-
-var overlayMaps = {
+//  Creating the overlayMarker
+const overlayMarker = {
   Airports: airportMarkerCluster,
   NationalPark: nationalMarkerCluster,
 };
 
-//  ############### Get Country Info #################
-function getCountryInfo(country) {
-  fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
-    $("#displayCountryName").html(result["data"][0]["countryName"]);
-    $("#displayLang").html(result["data"][0]["languages"]);
-    $("#displayCapital").html(result["data"][0]["capital"]);
-    $("#displayContinet").html(result["data"][0]["continentName"]);
-    $("#displayPopulation").html(result["data"][0]["population"]);
-  });
-}
-// ############# Currency #############
-function getCountryCurrencies() {
+// ################# Populating Country Currency Code Dropdown ##################
+function populateCurrencyCodeDropdown() {
   fetchData("libs/php/getCurrencies.php").then((result) => {
     // Create an array of key-value pairs (country code and country name) from the object
     const countryNameArray = $.map(result.data, function (country, currencyCode) {
@@ -295,7 +310,8 @@ function getCountryCurrencies() {
     });
   });
 }
-function getCurrencyRates() {
+// ################ Converting Currency And Fetching Rates Data ###########################
+function ConvertingCurrencyRates() {
   fetchData("libs/js/rates.json").then((result) => {
     $("#convertAmount").on("click", () => {
       const fromCurrency = $("#fromCurrency").val();
@@ -307,7 +323,7 @@ function getCurrencyRates() {
         const calculateExchangeRate = result.rates[fromCurrency] / result.rates[toCurrency];
         const convertedAmount = amount / calculateExchangeRate;
         displayConvertedAmount.text(
-          `${amount} in ${fromCurrency} = ${convertedAmount} in ${toCurrency}`
+          `${amount} in ${fromCurrency} = ${convertedAmount.toFixed(3)} in ${toCurrency}`
         );
       } else {
         displayConvertedAmount.text(
@@ -317,13 +333,14 @@ function getCurrencyRates() {
     });
   });
 }
-
+// ########## Click Convert Button To Call Function ConvertingCurrencyRates() #############################
 let convertButton = document.getElementById("convertAmount");
 // Add a click event listener to the button
 convertButton.addEventListener("click", function () {
-  getCurrencyRates();
+  ConvertingCurrencyRates();
 });
 
+// ########################## Populate Current Weather Dropdown Of the Selected Country ###########################
 let cityName;
 const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
 const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
@@ -351,15 +368,10 @@ function populateCityWeatherDropdown(cityDropdown) {
       const selectedOption = this.options[this.selectedIndex];
       cityName = selectedOption.text.replace(" ", "%20");
 
-      // console.log(encodedString);
       if (cityDropdown === cityWeatherDropdown) {
-        // console.log("matches");
-        console.log(cityDropdown);
         getWeatherData();
       }
       if (cityDropdown === cityDropdownForecast) {
-        // console.log("matches");
-        console.log(cityDropdownForecast);
         getForecastData();
       }
     });
@@ -372,7 +384,7 @@ function kelvinToCelsius(kelvin) {
   celsius = celsius.toFixed(2);
   return `${celsius}°C`;
 }
-
+// ###################### Fetching Current Weather Data and Rendering #################
 function getWeatherData() {
   fetchData("libs/php/getWeatherData.php", {
     cityName,
@@ -390,7 +402,7 @@ function getWeatherData() {
   });
 }
 
-// ########## Populating Forecast field
+// ###################### Rendering Forest Data For The Next 5 Days #################
 function populateForecastField(forecastList) {
   for (let i = 0; i < forecastList.length; i++) {
     const $tdElementDays = $(`#displayDay${i + 1}`);
@@ -413,13 +425,13 @@ function populateForecastField(forecastList) {
   }
 }
 
+// ################# Fetching Forecast Data #####################
 let forecastList = [];
 function getForecastData() {
   fetchData("libs/php/getForecastData.php", {
     cityName,
     countryCode,
   }).then((result) => {
-    console.log(result.data);
     // this gets the list of data for 5 days at midday(12:00:00)
     const forecastItems = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
 
@@ -438,6 +450,7 @@ function getForecastData() {
   });
 }
 
+// ##################  Fetching News Data Through PHP Routine  #################
 let newsArticles = [];
 function getNewsData() {
   fetchData("libs/php/getNewsData.php", { countryCode }).then((result) => {
@@ -456,7 +469,7 @@ function getNewsData() {
     newsArticles.length = 0;
   });
 }
-
+// ################# Rendering News Data As Article On Modal #######################
 function displayArticle(articles) {
   for (let i = 0; i < articles.length; i++) {
     const article = articles[i];
@@ -479,6 +492,7 @@ function displayArticle(articles) {
   }
 }
 
+// ############## Fetching Wiki data Through PHP Routine calls #####################
 const wikiInfos = [];
 function getWikiCountry(countryName) {
   countryName = countryName.replace(" ", "");
@@ -497,6 +511,7 @@ function getWikiCountry(countryName) {
   });
 }
 
+// ####################### Rendering wikiInfo data To The Modal ########################
 function displayWikiInfo(wikiInfos) {
   for (let i = 0; i < wikiInfos.length; i++) {
     const elemDisplayWikiTitle = $(`#displayWikiTitle${i + 1}`);
@@ -506,28 +521,6 @@ function displayWikiInfo(wikiInfos) {
     elemDisplayWikiTitle.text(wikiInfos[i].title);
     elemDisplayWikiSummary.text(wikiInfos[i].summary);
     elemDisplayWikiUrl.attr("href", `https://${wikiInfos[i].wikipediaUrl}`);
-
-    console.log(elemDisplayWikiUrl);
-  }
-}
-
-function getUserPosition() {
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        let lat = position.coords.latitude;
-        let lng = position.coords.longitude;
-        getUserCurrentCountry(lat, lng);
-        // View the location of the current user on zoom level 14 # NOTE # maxZoom = 16
-        displayMapAndControls(lat, lng, 14);
-        // You can also use the user's location (lat and lng) for other purposes here
-      },
-      function (error) {
-        alert("Error: " + error.message);
-      }
-    );
-  } else {
-    alert("Geolocation is not available in your browser.");
   }
 }
 
@@ -540,6 +533,6 @@ window.onload = function () {
   });
   populateCountryDropdown();
   getUserPosition();
-  getCountryCurrencies();
-  getCurrencyRates();
+  populateCurrencyCodeDropdown();
+  ConvertingCurrencyRates();
 };

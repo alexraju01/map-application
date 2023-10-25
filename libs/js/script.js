@@ -109,10 +109,6 @@ function displayMapAndControls(lat, lng, zoom) {
       map.removeLayer(lastMarker);
     }
   });
-  // ########## Cluster Markers ##########
-  // L.easyButton("fa-map-marker-alt fa-lg", function (btn, map) {
-  //   $("#markerModal").modal("show");
-  // }).addTo(map);
 
   // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {
@@ -431,7 +427,7 @@ function getForecastData() {
       forecastList.push({
         date: forecast.dt_txt,
         icon: forecast.weather[0].icon,
-        humidty: forecast.main.humidity,
+        humidity: forecast.main.humidity,
         temperature: forecast.main.temp,
         windSpeed: forecast.wind.speed,
       });

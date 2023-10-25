@@ -1,5 +1,5 @@
 // Initialize the Leaflet map
-console.log("h1");
+console.log("h4");
 const Streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -12,6 +12,17 @@ const Satellite = L.tileLayer(
       "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
   }
 );
+
+function renderMarkerIcon(iconUrl, iconSize, iconAnchor, popupAnchor) {
+  return L.icon({
+    iconUrl: iconUrl,
+    iconSize, // size of the icon
+    // shadowSize:   [50, 64], // size of the shadow
+    iconAnchor, // point of the icon which will correspond to marker's location
+    // shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor, // point from which the popup should open relative to the iconAnchor
+  });
+}
 
 const basemaps = { Streets, Satellite };
 let isUserLocationVisible = true; // Used to store user current location
@@ -99,9 +110,9 @@ function displayMapAndControls(lat, lng, zoom) {
     }
   });
   // ########## Cluster Markers ##########
-  L.easyButton("fa-map-marker-alt fa-lg", function (btn, map) {
-    $("#markerModal").modal("show");
-  }).addTo(map);
+  // L.easyButton("fa-map-marker-alt fa-lg", function (btn, map) {
+  //   $("#markerModal").modal("show");
+  // }).addTo(map);
 
   // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {
@@ -166,23 +177,8 @@ function selectCountryDropDown() {
 
   // Zoom out to the bounds of the selected country
   map.fitBounds(selectedCountryLayer.getBounds());
-  updateAirportMarkers(selectedCountry);
-
-  // Check if the checkbox is checked, and if it is, load airport markers
-  // if ($("#airportMarkerCheckbox").is(":checked")) {
-  //   updateAirportMarkers(selectedCountry);
-  // } else {
-  //   // If the checkbox is unchecked, remove the airport markers
-  //   clearAirportMarkers();
-  // }
-
-  if ($("#nationalMarkerCheckbox").is(":checked")) {
-    updateNationalMarkers(selectedCountry);
-  } else {
-    // If the checkbox is unchecked, remove the airport markers
-    clearNationalMarkers();
-  }
-
+  placeAirportMarkers(selectedCountry);
+  placeNationalMarkers(selectedCountry);
   getCountryInfo(selectedCountry);
   getWikiCountry(filteredCountry.properties.name);
 }
@@ -207,12 +203,12 @@ function getUserCurrentCountry(lat, lng) {
   });
 }
 
-let airports = [];
-var airportCluster = L.markerClusterGroup();
-
-function updateAirportMarkers(country) {
+let airportMarkerCluster = L.markerClusterGroup();
+function placeAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
-  airportCluster.clearLayers();
+  console.log(airportMarkerCluster);
+
+  airportMarkerCluster.clearLayers();
 
   fetchData("libs/php/getCountries.php", {
     airport: $("#airportMarkerCheckbox").val(),
@@ -223,24 +219,13 @@ function updateAirportMarkers(country) {
       const airportLat = airport["lat"];
       const airportLng = airport["lng"];
 
-      // Add the airport data to the 'airports' object with 'airportName' as the key
-      airports.push({
-        name: airportName,
-        lat: airportLat,
-        lng: airportLng,
-      });
-      var airportMarker = L.marker([parseFloat(airportLat), parseFloat(airportLng)]).bindPopup(
-        airportName
-      );
-      airportCluster.addLayer(airportMarker);
+      const airportMarker = L.marker([parseFloat(airportLat), parseFloat(airportLng)], {
+        icon: renderMarkerIcon("img/airportIcon.png", [50, 50], [20, 0], [4, 3]),
+      }).bindPopup(airportName);
+      airportMarkerCluster.addLayer(airportMarker);
     });
-    map.addLayer(airportCluster);
-    console.log(airportCluster);
-    // Create markers for each airport and add them to the markers array
-    // const markers = airports.map((airport) => {
-    //   const marker = L.marker([airport.lat, airport.lng]).bindPopup(airport.name);
-    //   return marker;
-    // });
+    map.addLayer(airportMarkerCluster);
+    console.log(airportMarkerCluster);
 
     // Create a marker cluster group for the airport markers
     airportMarkerCluster = L.markerClusterGroup();
@@ -251,96 +236,41 @@ function updateAirportMarkers(country) {
   });
 }
 
-var overlayMaps = {
-  Airports: airportCluster,
-};
-
-// function clearAirportMarkers() {
-//   if (airportMarkerCluster) {
-//     // clears the airport marker cluster layer
-//     airportMarkerCluster.clearLayers();
-//     //This emptys the string.
-//     airports.length = 0;
-//     // map.removeLayer(airportMarkerCluster);
-//   }
-// }
-
-$("#airportMarkerCheckbox").change(function () {
-  const isChecked = $(this).is(":checked");
-  if (isChecked) {
-    let selectedCountry = $("#countrySelect").val();
-    updateAirportMarkers(selectedCountry);
-  } else {
-    clearAirportMarkers();
-    // clears the airport array
-    airports.length = 0;
-  }
-});
-
 // ############################### Capital City #############################################
 let nationalPark = [];
-let nationalMarkerCluster; // Declare a variable to store the capital city marker cluster
+let nationalMarkerCluster = L.markerClusterGroup();
 
 // updates the airport marker
-function updateNationalMarkers(selectedCountry) {
-  // Clear existing airport markers on the map, if there is any
-  clearNationalMarkers();
-  // fetch data from php file
+function placeNationalMarkers(selectedCountry) {
+  // Clear existing airport markers on the map
+  nationalMarkerCluster.clearLayers();
 
+  // fetch data from php file
   fetchData("libs/php/getNational.php", {
     national: $("#nationalMarkerCheckbox").val(),
     country: selectedCountry,
   }).then((result) => {
-    if (nationalMarkerCluster) {
-      nationalMarkerCluster.clearLayers();
-    }
     $.each(result.data, function (index, national) {
       const nationalName = national["asciiName"];
       const nationalLat = national["lat"];
       const nationalLng = national["lng"];
 
-      // Add the airport data to the 'airports' object with 'airportName' as the key
-      nationalPark.push({
-        name: nationalName,
-        lat: nationalLat,
-        lng: nationalLng,
-      });
+      const nationalParkMarker = L.marker([parseFloat(nationalLat), parseFloat(nationalLng)], {
+        icon: renderMarkerIcon("img/nationalIcon.png", [60, 60], [25, 5], [4, 3]),
+      }).bindPopup(nationalName);
+      nationalMarkerCluster.addLayers(nationalParkMarker);
     });
-    // Create markers for each airport and add them to the markers array
-    const markers = nationalPark.map((national) => {
-      const marker = L.marker([national.lat, national.lng]).bindPopup(national.name);
-      return marker;
-    });
-
     // Create a marker cluster group for the airport markers
-    nationalMarkerCluster = L.markerClusterGroup();
-    nationalMarkerCluster.addLayers(markers);
-
+    // nationalMarkerCluster = L.markerClusterGroup();
     // Add the airportMarkercluster to the map
     map.addLayer(nationalMarkerCluster);
   });
 }
 
-function clearNationalMarkers() {
-  if (nationalMarkerCluster) {
-    // clears the airport marker cluster layer
-    nationalMarkerCluster.clearLayers();
-    //This emptys the string.
-    nationalPark.length = 0;
-    // map.removeLayer(airportMarkerCluster);
-  }
-}
-$("#nationalMarkerCheckbox").change(function () {
-  const isChecked = $(this).is(":checked");
-  if (isChecked) {
-    let selectedCountry = $("#countrySelect").val();
-    updateNationalMarkers(selectedCountry);
-  } else {
-    clearNationalMarkers();
-    // clears the airport array
-    nationalPark.length = 0;
-  }
-});
+var overlayMaps = {
+  Airports: airportMarkerCluster,
+  NationalPark: nationalMarkerCluster,
+};
 
 //  ############### Get Country Info #################
 function getCountryInfo(country) {

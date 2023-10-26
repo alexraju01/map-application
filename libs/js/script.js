@@ -331,7 +331,8 @@ function populateCurrencyCodeDropdown(countryCurrencyCode) {
 }
 // ################ Converting Currency And Fetching Rates Data ###########################
 function ConvertingCurrencyRates() {
-  fetchData("libs/js/rates.json").then((result) => {
+  fetchData("libs/php/getRates.php").then((result) => {
+    console.log("hello");
     $("#convertAmount").on("click", () => {
       const fromCurrency = $("#fromCurrency").val();
       const toCurrency = $("#toCurrency").val();
@@ -548,10 +549,9 @@ window.onload = function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
     populateCityWeatherDropdown(cityDropdownForecast);
-    // getNewsData(selectedCountry);
   });
   populateCountryDropdown();
   getUserPosition();
-  // populateCurrencyCodeDropdown();
+
   ConvertingCurrencyRates();
 };

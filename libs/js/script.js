@@ -160,7 +160,6 @@ function getUserCurrentCountry(lat, lng) {
         selectCountryDropDown();
         populateCityWeatherDropdown(cityWeatherDropdown);
         populateCityWeatherDropdown(cityDropdownForecast);
-        getNewsData();
         break;
       }
     }
@@ -169,50 +168,63 @@ function getUserCurrentCountry(lat, lng) {
 
 // ################# Populate dropdown using json file ############################3
 function populateCountryDropdown() {
-  // Extract country names and ISO Alpha-3 codes from the 'country' object
-  const countryDetail = country.features.map((feature) => {
-    return {
-      name: feature.properties.name,
-      iso_a2: feature.properties.iso_a2, // Assuming ISO Alpha-3 code is stored in the 'iso_a3' property
-    };
-  });
-  // Sort the country data by country name had to use localeCompare bacuse array.sort didnt work
-  countryDetail.sort((a, b) => a.name.localeCompare(b.name));
-  // Get a reference to the dropdown element
-  const dropdown = document.getElementById("countrySelect");
-  // Loop through the sorted country data and create options
-  countryDetail.forEach((countryInfo) => {
-    const option = document.createElement("option");
-    option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
-    option.textContent = countryInfo.name; // Display both name and code
-    option.id = countryInfo.name;
-    // Adding option element to dropdown
-    dropdown.appendChild(option);
+  fetchData("libs/php/getCountryAndBorders.php").then((result) => {
+    // Extract country names and ISO Alpha-3 codes from the 'country' object
+    const countryDetail = result.features.map((feature) => {
+      return {
+        name: feature.properties.name,
+        iso_a2: feature.properties.iso_a2, // Assuming ISO Alpha-3 code is stored in the 'iso_a3' property
+      };
+    });
+    // Sort the country data by country name had to use localeCompare bacuse array.sort didnt work
+    countryDetail.sort((a, b) => a.name.localeCompare(b.name));
+    // Get a reference to the dropdown element
+    const dropdown = document.getElementById("countrySelect");
+    // Loop through the sorted country data and create options
+    countryDetail.forEach((countryInfo) => {
+      const option = document.createElement("option");
+      option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
+      option.textContent = countryInfo.name; // Display both name and code
+      option.id = countryInfo.name;
+      // Adding option element to dropdown
+      dropdown.appendChild(option);
+    });
   });
 }
+
 // ############### Selecting country and updating the modals of that country ###########################
 function selectCountryDropDown() {
-  const selectedCountry = document.getElementById("countrySelect").value; // Get the selected country
-  // Find the GeoJSON data based on the selected country
-  const filteredCountry = country.features.find((feature) => {
-    countryCode = selectedCountry;
-    return feature.properties.iso_a2 === selectedCountry;
+  fetchData("libs/php/getCountryAndBorders.php").then((result) => {
+    const selectedCountry = document.getElementById("countrySelect").value; // Get the selected country
+    // Find the GeoJSON data based on the selected country
+    const filteredCountry = result.features.find((feature) => {
+      countryCode = selectedCountry;
+      return feature.properties.iso_a2 === selectedCountry;
+    });
+
+    // Remove the previously added country layer, if it exists
+    if (selectedCountryLayer) {
+      map.removeLayer(selectedCountryLayer);
+    }
+
+    // Create a GeoJSON layer for the selected country
+    selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
+
+    // Zoom out to the bounds of the selected country
+    map.fitBounds(selectedCountryLayer.getBounds());
+    placeAirportMarkers(selectedCountry);
+    placeNationalMarkers(selectedCountry);
+    getCountryInfo(selectedCountry);
+    getWikiCountry(filteredCountry.properties.name);
+    getCurrencyCode(selectedCountry);
+    getNewsData(selectedCountry);
+    function getCurrencyCode(country) {
+      fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
+        countryCurrencyCode = result["data"][0]["currencyCode"];
+        populateCurrencyCodeDropdown(countryCurrencyCode);
+      });
+    }
   });
-
-  // Remove the previously added country layer, if it exists
-  if (selectedCountryLayer) {
-    map.removeLayer(selectedCountryLayer);
-  }
-
-  // Create a GeoJSON layer for the selected country
-  selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
-
-  // Zoom out to the bounds of the selected country
-  map.fitBounds(selectedCountryLayer.getBounds());
-  placeAirportMarkers(selectedCountry);
-  placeNationalMarkers(selectedCountry);
-  getCountryInfo(selectedCountry);
-  getWikiCountry(filteredCountry.properties.name);
 }
 
 //  ############### Get Country Info #################
@@ -281,7 +293,7 @@ const overlayMarker = {
 };
 
 // ################# Populating Country Currency Code Dropdown ##################
-function populateCurrencyCodeDropdown() {
+function populateCurrencyCodeDropdown(countryCurrencyCode) {
   fetchData("libs/php/getCurrencies.php").then((result) => {
     // Create an array of key-value pairs (country code and country name) from the object
     const countryNameArray = $.map(result.data, function (country, currencyCode) {
@@ -308,6 +320,13 @@ function populateCurrencyCodeDropdown() {
       $("#fromCurrency").append(optionFromCurrency);
       $("#toCurrency").append(optionToCurrency);
     });
+    const fromCurrencyDropdown = document.getElementById("fromCurrency");
+    for (let i = 0; i < fromCurrencyDropdown.options.length; i++) {
+      if (fromCurrencyDropdown.options[i].value === countryCurrencyCode) {
+        fromCurrencyDropdown.selectedIndex = i;
+        break;
+      }
+    }
   });
 }
 // ################ Converting Currency And Fetching Rates Data ###########################
@@ -529,10 +548,10 @@ window.onload = function () {
     selectCountryDropDown();
     populateCityWeatherDropdown(cityWeatherDropdown);
     populateCityWeatherDropdown(cityDropdownForecast);
-    getNewsData();
+    // getNewsData(selectedCountry);
   });
   populateCountryDropdown();
   getUserPosition();
-  populateCurrencyCodeDropdown();
+  // populateCurrencyCodeDropdown();
   ConvertingCurrencyRates();
 };

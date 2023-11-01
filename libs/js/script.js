@@ -60,49 +60,49 @@ function displayMapAndControls(lat, lng, zoom) {
   L.control.layers(basemaps, overlayMarker).addTo(map);
 
   // adding easy button
-  L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
-    if (isUserLocationVisible) {
-      // storing the variable with user location using predefined
-      userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
-      map.setView([lat, lng], zoom);
-    } else {
-      // Remove the marker from the map
-      map.removeLayer(userMarker);
-    }
-    isUserLocationVisible = !isUserLocationVisible; // Toggle the marker's visibility state(true to false)
-  }).addTo(map);
+  // L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
+  //   if (isUserLocationVisible) {
+  //     // storing the variable with user location using predefined
+  //     userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
+  //     map.setView([lat, lng], zoom);
+  //   } else {
+  //     // Remove the marker from the map
+  //     map.removeLayer(userMarker);
+  //   }
+  //   isUserLocationVisible = !isUserLocationVisible; // Toggle the marker's visibility state(true to false)
+  // }).addTo(map);
 
-  // Function to check if the location exists in the markers array
-  function locationExists(latlng) {
-    // array.some checks the first instance of this element that matches the marker
-    return markers.some((marker) => {
-      // this returns the lat and lng value of the marker and checks if it equals to value of latlng
-      return marker.getLatLng().equals(latlng);
-    });
-  }
+  // // Function to check if the location exists in the markers array
+  // function locationExists(latlng) {
+  //   // array.some checks the first instance of this element that matches the marker
+  //   return markers.some((marker) => {
+  //     // this returns the lat and lng value of the marker and checks if it equals to value of latlng
+  //     return marker.getLatLng().equals(latlng);
+  //   });
+  // }
 
   // Function to handle left-click
-  map.on("click", (e) => {
-    // 0 = left mouse button
-    if (e.originalEvent.button === 0) {
-      // Left-click: Check if a marker already exists at the clicked location
-      if (locationExists(e.latlng)) {
-        return; // Do nothing if the location exists
-      }
-      // Create a new marker and add it to the map and the markers array
-      var customLabel = prompt("Enter a label for the marker:");
-      if (customLabel) {
-        let marker = L.marker(e.latlng).addTo(map).bindPopup(customLabel);
-        markers.push(marker);
+  // map.on("click", (e) => {
+  //   // 0 = left mouse button
+  //   if (e.originalEvent.button === 0) {
+  //     // Left-click: Check if a marker already exists at the clicked location
+  //     if (locationExists(e.latlng)) {
+  //       return; // Do nothing if the location exists
+  //     }
+  //     // Create a new marker and add it to the map and the markers array
+  //     var customLabel = prompt("Enter a label for the marker:");
+  //     if (customLabel) {
+  //       let marker = L.marker(e.latlng).addTo(map).bindPopup(customLabel);
+  //       markers.push(marker);
 
-        // Add a context menu to the marker for removing
-        marker.on("contextmenu", () => {
-          map.removeLayer(marker);
-          markers = markers.filter((m) => m !== marker);
-        });
-      }
-    }
-  });
+  //       // Add a context menu to the marker for removing
+  //       marker.on("contextmenu", () => {
+  //         map.removeLayer(marker);
+  //         markers = markers.filter((m) => m !== marker);
+  //       });
+  //     }
+  //   }
+  // });
 
   // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {

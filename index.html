@@ -204,7 +204,85 @@
       </div>
     </div>
 
-    <div class="modal fade" id="weatherInfoModal" data-bs-backdrop="false" tabindex="-1">
+    <div id="weatherInfoModal" class="modal fade" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false" aria-labelledby="weatherModalLabel" aria-hidden="true">
+    
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        
+        <div class="modal-content shadow">      
+            
+          <div class="modal-header bg-primary bg-gradient text-white">
+    
+            <h5 class="modal-title" id="weatherModalLabel"></h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    
+          </div>
+    
+          <div class="modal-body">
+            <div id="pre-load"></div>
+            <div class="row">
+              <div class="col border m-2">
+                <p class="fw-bold fs-5 mt-1">TODAY</p>
+                <div class="row">
+                  <div class="col text-center m-3">
+                    <p id="todayConditions" class="fw-bold fs-6"></p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="todayIcon" class="img-fluid mt-0" src="" alt="" title="">
+                  </div>              
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="todayMaxTemp"></span></p>
+                    <p class="fs-5 mt-0 text-secondary"><span id="todayMinTemp">-2</span></p>
+                  </div>              
+                </div>
+              </div>   
+            </div>
+            <div class="row">
+              <div class="col border m-2">
+                <div class="row">
+                  <div class="col text-center">
+                    <p id="day1Date" class="fw-bold fs-6 mt-3"></p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="day1MaxTemp"></span><sup>o</sup>c</p>
+                    <p class="fs-5 mt-0 text-secondary"><span id="day1MinTemp"></span><sup>o</sup>c</p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="day1Icon" src="" alt="" title="">
+                  </div>    
+                </div>
+              </div>   
+              <div class="col border m-2">
+                <div class="row">
+                  <div class="col text-center">
+                    <p id="day2Date" class="fw-bold fs-6 mt-3">Fri 16th</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="day2MaxTemp"></span><sup>o</sup>c</p>
+                    <p class="fs-5 mt-0 text-secondary"><span id="day2MinTemp"></span><sup>o</sup>c</p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="day2Icon" src="" alt="" title="">
+                  </div>    
+                </div>
+              </div>         
+           </div>   
+          </div>
+          
+          <div class="modal-footer">
+            <p class="fs-6 fw-light">Last updated <span id="lastUpdated"></span>. Powered by <a href="https://www.weatherapi.com/" target="_blank" title="Free Weather API">WeatherAPI.com</a></p>
+          </div>
+    
+        </div>
+          
+      </div>
+      
+    </div>
+
+    <!-- <div class="modal fade" id="weatherInfoModal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-success text-white">
@@ -339,7 +417,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div id="newsModal" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">

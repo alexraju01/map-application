@@ -59,51 +59,6 @@ function displayMapAndControls(lat, lng, zoom) {
   }).setView([lat, lng], zoom);
   L.control.layers(basemaps, overlayMarker).addTo(map);
 
-  // adding easy button
-  // L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
-  //   if (isUserLocationVisible) {
-  //     // storing the variable with user location using predefined
-  //     userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
-  //     map.setView([lat, lng], zoom);
-  //   } else {
-  //     // Remove the marker from the map
-  //     map.removeLayer(userMarker);
-  //   }
-  //   isUserLocationVisible = !isUserLocationVisible; // Toggle the marker's visibility state(true to false)
-  // }).addTo(map);
-
-  // // Function to check if the location exists in the markers array
-  // function locationExists(latlng) {
-  //   // array.some checks the first instance of this element that matches the marker
-  //   return markers.some((marker) => {
-  //     // this returns the lat and lng value of the marker and checks if it equals to value of latlng
-  //     return marker.getLatLng().equals(latlng);
-  //   });
-  // }
-
-  // Function to handle left-click
-  // map.on("click", (e) => {
-  //   // 0 = left mouse button
-  //   if (e.originalEvent.button === 0) {
-  //     // Left-click: Check if a marker already exists at the clicked location
-  //     if (locationExists(e.latlng)) {
-  //       return; // Do nothing if the location exists
-  //     }
-  //     // Create a new marker and add it to the map and the markers array
-  //     var customLabel = prompt("Enter a label for the marker:");
-  //     if (customLabel) {
-  //       let marker = L.marker(e.latlng).addTo(map).bindPopup(customLabel);
-  //       markers.push(marker);
-
-  //       // Add a context menu to the marker for removing
-  //       marker.on("contextmenu", () => {
-  //         map.removeLayer(marker);
-  //         markers = markers.filter((m) => m !== marker);
-  //       });
-  //     }
-  //   }
-  // });
-
   // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {
     $("#countryInfoModal").modal("show");
@@ -154,12 +109,12 @@ function getUserCurrentCountry(lat, lng) {
     const { countryName } = result.data;
     const countrySelect = document.getElementById("countrySelect");
     for (let i = 0; i < countrySelect.options.length; i++) {
-      if (countrySelect.options[i].id === countryName) {
+      if (countrySelect.options[i].textContent === countryName) {
         currentOption = i;
         countrySelect.selectedIndex = i;
         selectCountryDropDown();
-        populateCityWeatherDropdown(cityWeatherDropdown);
-        populateCityWeatherDropdown(cityDropdownForecast);
+        // populateCityWeatherDropdown();
+
         break;
       }
     }
@@ -185,7 +140,7 @@ function populateCountryDropdown() {
       const option = document.createElement("option");
       option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
       option.textContent = countryInfo.name; // Display both name and code
-      option.id = countryInfo.name;
+      // option.id = countryInfo.name;
       // Adding option element to dropdown
       dropdown.appendChild(option);
     });
@@ -202,6 +157,7 @@ function selectCountryDropDown() {
       return feature.properties.iso_a2 === selectedCountry;
     });
 
+    console.log(selectedCountry);
     // Remove the previously added country layer, if it exists
     if (selectedCountryLayer) {
       map.removeLayer(selectedCountryLayer);
@@ -209,7 +165,6 @@ function selectCountryDropDown() {
 
     // Create a GeoJSON layer for the selected country
     selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
-
     // Zoom out to the bounds of the selected country
     map.fitBounds(selectedCountryLayer.getBounds());
     placeAirportMarkers(selectedCountry);
@@ -218,6 +173,8 @@ function selectCountryDropDown() {
     getWikiCountry(filteredCountry.properties.name);
     getCurrencyCode(selectedCountry);
     getNewsData(selectedCountry);
+    getWeatherData();
+    // getWeatherData();
     function getCurrencyCode(country) {
       fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
         countryCurrencyCode = result["data"][0]["currencyCode"];
@@ -359,115 +316,79 @@ convertButton.addEventListener("click", function () {
   ConvertingCurrencyRates();
 });
 
-// ########################## Populate Current Weather Dropdown Of the Selected Country ###########################
-let cityName;
-const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
-const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
-
-function populateCityWeatherDropdown(cityDropdown) {
-  fetchData("libs/php/getCountryPlaceLatLng.php", {
-    country: $("#countrySelect").val(),
-  }).then((result) => {
-    const sortedPlaceData = result.data.sort((a, b) => a.toponymName.localeCompare(b.toponymName)); // Sort by place name
-    cityDropdown.innerHTML = "";
-    sortedPlaceData.forEach((place) => {
-      placeName = place["toponymName"];
-      placeLat = place["lat"];
-      placeLng = place["lng"];
-
-      const option = document.createElement("option");
-      option.value = `${placeLat},${placeLng}`; // Set the value to lat,lng
-      option.text = placeName; // Display the city name as the text
-
-      cityDropdown.appendChild(option);
-    });
-
-    cityDropdown.addEventListener("change", function () {
-      // //  the selected index retrievs the option element
-      const selectedOption = this.options[this.selectedIndex];
-      cityName = selectedOption.text.replace(" ", "%20");
-
-      if (cityDropdown === cityWeatherDropdown) {
-        getWeatherData();
-      }
-      if (cityDropdown === cityDropdownForecast) {
-        getForecastData();
-      }
-    });
-  });
-}
-
 // ########## Convert kelvin value to celsius ##########
 function kelvinToCelsius(kelvin) {
   let celsius = kelvin - 273.15;
-  celsius = celsius.toFixed(2);
+  celsius = Math.round(celsius);
   return `${celsius}°C`;
 }
-// ###################### Fetching Current Weather Data and Rendering #################
-function getWeatherData() {
-  fetchData("libs/php/getWeatherData.php", {
-    cityName,
-    countryCode,
-  }).then((result) => {
-    const weatherIcon = result.data.weather[0].icon;
-    document.getElementById(
-      "weatherIcon"
-    ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
-    $("#displayWeatherText").html(result.data.weather[0].description);
-    $("#displayHumidity").html(result.data.main.humidity);
-    $("#displayTemperature").html(kelvinToCelsius(result.data.main.temp));
-    $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
-    $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
-  });
+
+function dateInUk(dateTimeString) {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const date = new Date(dateTimeString);
+  const dayName = days[date.getDay()];
+
+  const dateParts = dateTimeString.split(" ")[0].split("-");
+  return `${dayName} ${dateParts[2]}`;
 }
 
-// ###################### Rendering Forest Data For The Next 5 Days #################
-function populateForecastField(forecastList) {
-  for (let i = 0; i < forecastList.length; i++) {
-    const $tdElementDays = $(`#displayDay${i + 1}`);
-    const $tdElementIcon = $(`#D${i + 1}displayStatusIcon`);
-    const $tdElementHumidity = $(`#D${i + 1}displayHumidity`);
-    const $tdElementTemperature = $(`#D${i + 1}displayTemperature`);
-    const $tdElementWindSpeed = $(`#D${i + 1}displayWindSpeed`);
+// ###################### Fetching Current Weather Data and Rendering #################
+function getWeatherData() {
+  fetchData("libs/php/getCountryInfo.php", {
+    country: $("#countrySelect").val(),
+  }).then((result) => {
+    let cityName = result.data[0].capital;
+    let countryName = $("#countrySelect option:selected").text();
 
-    // converting string base date time to days e.g. 2023-10-25 12:00:00 => wed
-    const date = new Date(forecastList[i].date);
-    const dayOfWeek = date.toLocaleDateString("en-US", {
-      weekday: "short",
+    fetchData("libs/php/getWeatherData.php", {
+      cityName,
+      countryCode,
+    }).then((result) => {
+      $("#weatherModalLabel").html(cityName + ", " + countryName);
+
+      console.log(result);
+      const weatherIcon = result.data.weather[0].icon;
+      document.getElementById(
+        "todayIcon"
+      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      $("#todayConditions").html(result.data.weather[0].description);
+      $("#displayHumidity").html(result.data.main.humidity);
+      // console.log(result.data.main.temp_max);
+      $("#todayMaxTemp").html(kelvinToCelsius(result.data.main.temp_max));
+      $("#todayMinTemp").html(kelvinToCelsius(result.data.main.temp_min));
+      $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
     });
 
-    $tdElementDays.text(dayOfWeek);
-    $tdElementIcon.attr("src", `https://openweathermap.org/img/wn/${forecastList[i].icon}@2x.png`);
-    $tdElementHumidity.text(forecastList[i].humidity);
-    $tdElementTemperature.text(kelvinToCelsius(forecastList[i].temperature));
-    $tdElementWindSpeed.text(`${forecastList[i].windSpeed} mph`);
-  }
+    fetchData("libs/php/getForecastData.php", {
+      cityName,
+      countryCode,
+    }).then((result) => {
+      // this gets the list of data for 5 days at midday(12:00:00)
+      const forecastItems = result.data.list
+        .filter((item) => item.dt_txt.includes("12:00:00"))
+        .slice(1, 3);
+
+      console.log(forecastItems);
+
+      $("#day1Date").text(dateInUk(forecastItems[0].dt_txt));
+      document.getElementById(
+        "day1Icon"
+      ).src = `https://openweathermap.org/img/wn/${forecastItems[0].weather[0].icon}@2x.png`;
+      $("#day1MaxTemp").text(kelvinToCelsius(forecastItems[0].main.temp_max));
+      $("#day1MinTemp").text(kelvinToCelsius(forecastItems[0].main.temp_min));
+
+      $("#day2Date").text(dateInUk(forecastItems[1].dt_txt));
+      document.getElementById(
+        "day2Icon"
+      ).src = `https://openweathermap.org/img/wn/${forecastItems[1].weather[0].icon}@2x.png`;
+      $("#day2MaxTemp").text(kelvinToCelsius(forecastItems[1].main.temp_max));
+      $("#day2MinTemp").text(kelvinToCelsius(forecastItems[1].main.temp_min));
+    });
+  });
 }
 
 // ################# Fetching Forecast Data #####################
-let forecastList = [];
-function getForecastData() {
-  fetchData("libs/php/getForecastData.php", {
-    cityName,
-    countryCode,
-  }).then((result) => {
-    // this gets the list of data for 5 days at midday(12:00:00)
-    const forecastItems = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
-
-    forecastItems.forEach((forecast) => {
-      forecastList.push({
-        date: forecast.dt_txt,
-        icon: forecast.weather[0].icon,
-        humidity: forecast.main.humidity,
-        temperature: forecast.main.temp,
-        windSpeed: forecast.wind.speed,
-      });
-    });
-
-    populateForecastField(forecastList);
-    forecastList.length = 0;
-  });
-}
 
 // ##################  Fetching News Data Through PHP Routine  #################
 let newsArticles = [];
@@ -546,11 +467,8 @@ function displayWikiInfo(wikiInfos) {
 window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
-    populateCityWeatherDropdown(cityWeatherDropdown);
-    populateCityWeatherDropdown(cityDropdownForecast);
   });
   populateCountryDropdown();
   getUserPosition();
-
   ConvertingCurrencyRates();
 };

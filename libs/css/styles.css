@@ -23,36 +23,3 @@ body {
   width: 200px;
   margin: 0 auto;
 }
-
-.info {
-  padding: 6px 8px;
-  font: 14px/16px Arial, Helvetica, sans-serif;
-  background: white;
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-}
-.info h4 {
-  margin: 0 0 5px;
-  color: #777;
-}
-
-.custom-info-control {
-  position: absolute;
-  background-color: white;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  pointer-events: none; /* Prevent the control from blocking mouse events on the map */
-}
-
-.leaflet-control-easy-button-button {
-  background-color: #3498db; /* Change this to your desired default color */
-  color: #ffffff; /* Text color */
-}
-
-/* Define active button styles (when clicked) */
-.leaflet-control-easy-button-button.leaflet-active {
-  background-color: #e74c3c; /* Change this to your desired active color */
-  /* You can adjust other styles for the active state here */
-}

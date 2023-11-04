@@ -7,8 +7,13 @@ $executionStartTime = microtime(true);
 
 $userAgent = "mapApp/1.0"; // Replace with your application name and version
 
+
+// apinew.io
+// pub_3227472fc784860c70695cb1b63bc42bdc860
+
+
 // Initialize CURL:
-$api = 'https://newsapi.org/v2/top-headlines?pageSize=2&country='. $_REQUEST['countryCode'].'&apiKey=a2263bc13916435698b966fe246e2f00';
+$api = 'https://newsdata.io/api/1/news?country='. $_REQUEST['countryCode'] .'&apikey=pub_3227472fc784860c70695cb1b63bc42bdc860';
 // Initialize a CURL session and set options to make the HTTP request
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $api);

@@ -7,10 +7,6 @@
     <!-- leaflet marked 1.8.0 -->
     <link rel="stylesheet" href="./node_modules/leaflet/dist/leaflet.css" />
 
-    <!-- <link rel="stylesheet" href="./libs/css/leaflet@1.9.4_dist_leaflet.css" /> -->
-
-    <!-- Make sure you put this AFTER Leaflet's CSS -->
-
     <!-- toastify 1.6.1 -->
     <link rel="stylesheet" href="./libs/css/toastify-js_1.6.1_toastify.min.css" />
     <!-- leaflet markercluster default 1.5.3 -->
@@ -34,13 +30,15 @@
     <link rel="stylesheet" href="./libs/css/bootstrap_5.2.3_css_bootstrap.min.css" />
     <!-- Leaflet EasyButton 2.4.0 -->
     <link rel="stylesheet" href="./libs/css/Leaflet.EasyButton_2.4.0_easy-button.min.css" />
+
+    <!-- Custom Tab Icon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon_io/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon_io/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon_io/favicon-16x16.png" />
+    <link rel="manifest" href="./favicon_io/site.webmanifest" />
+
     <!-- styles.css -->
     <link rel="stylesheet" href="./libs/css/styles.css" />
-
-    <link rel="apple-touch-icon" sizes="180x180" href="img/favicon_io/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon_io/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon_io/favicon-16x16.png" />
-    <link rel="manifest" href="img/favicon_io/site.webmanifest" />
   </head>
   <body>
     <span id="selectContainer">
@@ -102,6 +100,7 @@
       </div>
     </div>
 
+    <!-- ############################### Currency Exchnage ################################# -->
     <div id="currencyExchange" class="modal" data-bs-backdrop="false" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
@@ -118,7 +117,7 @@
           <div class="modal-body">
             <form id="currencyConverter">
               <div class="mb-3">
-                <label for="amount" id="amount" class="form-label">Amount:</label>
+                <label for="inputAmount" id="amount" class="form-label">Amount:</label>
                 <input
                   type="number"
                   id="inputAmount"
@@ -141,19 +140,15 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label for="convertedAmount" class="form-label">Converted Amount:</label>
-                <div id="displayConvertedAmount">Amount will be displayed here</div>
-              </div>
-              <div class="mb-3">
-                <button type="button" id="convertAmount" class="btn btn-success">Convert</button>
+                <label for="inputAmount" class="form-label">Converted Amount:</label>
+                <label
+                  for="inputAmount"
+                  id="displayConvertedAmount"
+                  placeholder="Converted value..."
+                  >value</label
+                >
               </div>
             </form>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">
-              Close
-            </button>
           </div>
         </div>
       </div>
@@ -204,14 +199,20 @@
       </div>
     </div>
 
-    <div class="modal fade" id="weatherInfoModal" data-bs-backdrop="false" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">
-              <i class="fas fa-cloud-sun fa-2x mr-2"></i>
-              <span id="displayWeatherDescription">Weather Information</span>
-            </h5>
+    <!-- ################# Weather Section ######################## -->
+    <div
+      id="weatherInfoModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-labelledby="weatherModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title" id="weatherModalLabel"></h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -219,170 +220,96 @@
               aria-label="Close"
             ></button>
           </div>
+
           <div class="modal-body">
-            <ul class="nav nav-tabs" id="weatherTabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <a
-                  class="nav-link active"
-                  id="currentWeatherTab"
-                  data-bs-toggle="tab"
-                  href="#currentWeather"
-                  role="tab"
-                  >Current Weather</a
-                >
-              </li>
-              <li class="nav-item" role="presentation">
-                <a
-                  class="nav-link"
-                  id="forecastTab"
-                  data-bs-toggle="tab"
-                  href="#forecast"
-                  role="tab"
-                  >Forecast</a
-                >
-              </li>
-            </ul>
-            <div class="tab-content" id="weatherTabsContent">
-              <div class="tab-pane fade show active" id="currentWeather" role="tabpanel">
-                <!-- Current Weather content -->
-                <div class="mb-3">
-                  <label for="cityWeatherDropdown" class="form-label">Select a City:</label>
-                  <select id="cityWeatherDropdown" class="form-select">
-                    <!-- populate -->
-                  </select>
+            <div id="pre-load"></div>
+            <div class="row">
+              <div class="col border m-2">
+                <p class="fw-bold fs-5 mt-1">TODAY</p>
+                <div class="row">
+                  <div class="col text-center m-3">
+                    <p id="todayConditions" class="fw-bold fs-6"></p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="todayIcon" class="img-fluid mt-0" src="" alt="" title="" />
+                  </div>
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="todayMaxTemp"></span></p>
+                    <p class="fs-5 mt-0 text-secondary"><span id="todayMinTemp">-2</span></p>
+                  </div>
                 </div>
-                <div class="text-center">
-                  <img id="weatherIcon" />
-                  <!-- Display the current weather icon here -->
-                  <h2 id="displayWeatherText"></h2>
-                </div>
-                <table class="table table-bordered mt-4">
-                  <tr>
-                    <td><strong>Humidity:</strong></td>
-                    <td id="displayHumidity"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Temperature:</strong></td>
-                    <td id="displayTemperature"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>feels like:</strong></td>
-                    <td id="displayFeelsLike"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Wind Speed:</strong></td>
-                    <td id="displayWindSpeed"></td>
-                  </tr>
-                </table>
-              </div>
-              <div class="tab-pane fade" id="forecast" role="tabpanel">
-                <!-- Forecast content (hidden by default) -->
-                <!-- Add your forecast content here -->
-                <div class="mb-3">
-                  <label for="cityDropdownForecast" class="form-label">Select a City:</label>
-                  <select id="cityDropdownForecast" class="form-select">
-                    <!-- populate -->
-                  </select>
-                </div>
-                <table class="table table-bordered mt-4">
-                  <tr>
-                    <td><strong>Day:</strong></td>
-                    <td id="displayDay1"></td>
-                    <td id="displayDay2"></td>
-                    <td id="displayDay3"></td>
-                    <td id="displayDay4"></td>
-                    <td id="displayDay5"></td>
-                  </tr>
-
-                  <tr>
-                    <td><strong>Status</strong></td>
-                    <td><img src="" id="D1displayStatusIcon" alt="" width="50" /></td>
-                    <td><img src="" id="D2displayStatusIcon" alt="" width="50" /></td>
-                    <td><img src="" id="D3displayStatusIcon" alt="" width="50" /></td>
-                    <td><img src="" id="D4displayStatusIcon" alt="" width="50" /></td>
-                    <td><img src="" id="D5displayStatusIcon" alt="" width="50" /></td>
-                  </tr>
-
-                  <tr>
-                    <td><strong>Humidity:</strong></td>
-                    <td id="D1displayHumidity"></td>
-                    <td id="D2displayHumidity"></td>
-                    <td id="D3displayHumidity"></td>
-                    <td id="D4displayHumidity"></td>
-                    <td id="D5displayHumidity"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Temperature:</strong></td>
-                    <td id="D1displayTemperature"></td>
-                    <td id="D2displayTemperature"></td>
-                    <td id="D3displayTemperature"></td>
-                    <td id="D4displayTemperature"></td>
-                    <td id="D5displayTemperature"></td>
-                  </tr>
-
-                  <tr>
-                    <td><strong>Wind Speed:</strong></td>
-                    <td id="D1displayWindSpeed"></td>
-                    <td id="D2displayWindSpeed"></td>
-                    <td id="D3displayWindSpeed"></td>
-                    <td id="D4displayWindSpeed"></td>
-                    <td id="D5displayWindSpeed"></td>
-                  </tr>
-                </table>
               </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">
-              Close
-            </button>
+            <div class="row">
+              <div class="col border m-2">
+                <div class="row">
+                  <div class="col text-center">
+                    <p id="day1Date" class="fw-bold fs-6 mt-3"></p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="day1MaxTemp"></span><sup>o</sup>c</p>
+                    <p class="fs-5 mt-0 text-secondary">
+                      <span id="day1MinTemp"></span><sup>o</sup>c
+                    </p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="day1Icon" src="" alt="" title="" />
+                  </div>
+                </div>
+              </div>
+              <div class="col border m-2">
+                <div class="row">
+                  <div class="col text-center">
+                    <p id="day2Date" class="fw-bold fs-6 mt-3">Fri 16th</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col text-center">
+                    <p class="fw-bold fs-4 mb-0"><span id="day2MaxTemp"></span><sup>o</sup>c</p>
+                    <p class="fs-5 mt-0 text-secondary">
+                      <span id="day2MinTemp"></span><sup>o</sup>c
+                    </p>
+                  </div>
+                  <div class="col text-center">
+                    <img id="day2Icon" src="" alt="" title="" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="newsModal" class="modal" data-bs-backdrop="false" tabindex="-1">
+    <div
+      id="newsModal"
+      class="modal fade"
+      tabindex="-1"
+      data-bs-backdrop="false"
+      data-bs-keyboard="false"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <!--   the last two classes centre the modal and, if the content is too long, ensures  -->
+      <!--   that the header and footer are always on display by making the body scroll -->
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header bg-success text-white">
-            <h5 class="modal-title">News Details</h5>
+        <div class="modal-content shadow">
+          <div class="modal-header bg-success bg-gradient text-white">
+            <h5 class="modal-title">BREAKING NEWS</h5>
             <button
               type="button"
-              class="btn-close"
+              class="btn-close btn-close-white"
               data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-12">
-                <div class="news-item card">
-                  <div class="card-body">
-                    <p id="displayNewsNum1"></p>
-                    <h5 id="displayNewsTitle1"></h5>
-                    <p id="displayNewsPublishedAt1"></p>
-                    <p id="displayNewsSource1"></p>
-                    <a href="#" id="displayNewsUrl1" target="_blank">
-                      <button class="btn btn-primary bg-success btn-sm w-40">Read More</button>
-                    </a>
-                  </div>
-                </div>
-                <div class="news-item card">
-                  <div class="card-body">
-                    <p id="displayNewsNum2"></p>
-                    <h5 id="displayNewsTitle2"></h5>
-                    <p id="displayNewsPublishedAt2"></p>
-                    <p id="displayNewsSource2"></p>
-                    <a href="#" id="displayNewsUrl2" target="_blank">
-                      <button class="btn btn-primary bg-success btn-sm w-40">Read More</button>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div id="newsContainer" class="modal-body">
+            <!-- js dynamically populated -->
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-success btn-sm" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
               Close
             </button>
           </div>
@@ -405,7 +332,7 @@
           <div class="modal-body">
             <div class="row">
               <div class="col-md-12">
-                <div class="wiki-item card">
+                <div class="wiki-item card mb-4">
                   <div class="card-body">
                     <h5 id="displayWikiTitle1"></h5>
                     <p id="displayWikiSummary1"></p>
@@ -434,15 +361,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Make sure you put this AFTER Leaflet's CSS -->
-    <!-- <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script> -->
-
-    <!-- <script type="application/javascript" src="./libs/js/leaflet@1.9.4_dist_leaflet.js"></script> -->
 
     <!-- leaflet 1.8.0 -->
     <script type="application/javascript" src="./libs/js/leaflet_1.8.0_leaflet.js"></script>
@@ -474,7 +392,8 @@
       src="./libs/js/Leaflet.EasyButton_2.4.0_easy-button.min.js"
     ></script>
     <!-- scripy.js -->
+    <!-- Numeral -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js"></script>
     <script type="application/javascript" src="./libs/js/script.js"></script>
-    <!-- <script type="application/javascript" src="./libs/js/countryBorders.js"></script> -->
   </body>
 </html>

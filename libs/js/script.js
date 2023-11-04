@@ -1,5 +1,4 @@
 // Initialize the Leaflet map
-
 const Streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -48,7 +47,6 @@ const fetchData = async (url, data = {}) => {
     return result;
   } catch (error) {
     // Handle errors here
-    console.error(error);
     throw error; // Re-throw the error if needed
   }
 };
@@ -58,51 +56,6 @@ function displayMapAndControls(lat, lng, zoom) {
     layers: [Streets],
   }).setView([lat, lng], zoom);
   L.control.layers(basemaps, overlayMarker).addTo(map);
-
-  // adding easy button
-  L.easyButton("fa-crosshairs fa-lg", (btn, map) => {
-    if (isUserLocationVisible) {
-      // storing the variable with user location using predefined
-      userMarker = L.marker([lat, lng]).addTo(map).bindPopup("You are here").openPopup();
-      map.setView([lat, lng], zoom);
-    } else {
-      // Remove the marker from the map
-      map.removeLayer(userMarker);
-    }
-    isUserLocationVisible = !isUserLocationVisible; // Toggle the marker's visibility state(true to false)
-  }).addTo(map);
-
-  // Function to check if the location exists in the markers array
-  function locationExists(latlng) {
-    // array.some checks the first instance of this element that matches the marker
-    return markers.some((marker) => {
-      // this returns the lat and lng value of the marker and checks if it equals to value of latlng
-      return marker.getLatLng().equals(latlng);
-    });
-  }
-
-  // Function to handle left-click
-  map.on("click", (e) => {
-    // 0 = left mouse button
-    if (e.originalEvent.button === 0) {
-      // Left-click: Check if a marker already exists at the clicked location
-      if (locationExists(e.latlng)) {
-        return; // Do nothing if the location exists
-      }
-      // Create a new marker and add it to the map and the markers array
-      var customLabel = prompt("Enter a label for the marker:");
-      if (customLabel) {
-        let marker = L.marker(e.latlng).addTo(map).bindPopup(customLabel);
-        markers.push(marker);
-
-        // Add a context menu to the marker for removing
-        marker.on("contextmenu", () => {
-          map.removeLayer(marker);
-          markers = markers.filter((m) => m !== marker);
-        });
-      }
-    }
-  });
 
   // ########## Country Info ##########
   L.easyButton("fa-info fa-lg", function (btn, map) {
@@ -147,19 +100,17 @@ function getUserPosition() {
   }
 }
 
-// ############### Auto slects the country box #####################
+// ############### Auto selects the country box #####################
 let currentOption;
 function getUserCurrentCountry(lat, lng) {
   fetchData("libs/php/getCurrentCountry.php", { lat, lng }).then((result) => {
     const { countryName } = result.data;
     const countrySelect = document.getElementById("countrySelect");
     for (let i = 0; i < countrySelect.options.length; i++) {
-      if (countrySelect.options[i].id === countryName) {
+      if (countrySelect.options[i].textContent === countryName) {
         currentOption = i;
         countrySelect.selectedIndex = i;
         selectCountryDropDown();
-        populateCityWeatherDropdown(cityWeatherDropdown);
-        populateCityWeatherDropdown(cityDropdownForecast);
         break;
       }
     }
@@ -168,12 +119,13 @@ function getUserCurrentCountry(lat, lng) {
 
 // ################# Populate dropdown using json file ############################3
 function populateCountryDropdown() {
-  fetchData("libs/php/getCountryAndBorders.php").then((result) => {
-    // Extract country names and ISO Alpha-3 codes from the 'country' object
-    const countryDetail = result.features.map((feature) => {
+  fetchData("libs/php/getCountryNameAndCode.php").then((result) => {
+    let countries = result;
+
+    const countryDetail = countries.map((country) => {
       return {
-        name: feature.properties.name,
-        iso_a2: feature.properties.iso_a2, // Assuming ISO Alpha-3 code is stored in the 'iso_a3' property
+        name: country.name,
+        iso_a2: country.iso_a2, // Assuming ISO Alpha-3 code is stored in the 'iso_a3' property
       };
     });
     // Sort the country data by country name had to use localeCompare bacuse array.sort didnt work
@@ -185,7 +137,6 @@ function populateCountryDropdown() {
       const option = document.createElement("option");
       option.value = countryInfo.iso_a2; // Set the ISO Alpha-3 code as the option value
       option.textContent = countryInfo.name; // Display both name and code
-      option.id = countryInfo.name;
       // Adding option element to dropdown
       dropdown.appendChild(option);
     });
@@ -194,7 +145,7 @@ function populateCountryDropdown() {
 
 // ############### Selecting country and updating the modals of that country ###########################
 function selectCountryDropDown() {
-  fetchData("libs/php/getCountryAndBorders.php").then((result) => {
+  fetchData("libs/php/getCountryBorders.php").then((result) => {
     const selectedCountry = document.getElementById("countrySelect").value; // Get the selected country
     // Find the GeoJSON data based on the selected country
     const filteredCountry = result.features.find((feature) => {
@@ -208,7 +159,12 @@ function selectCountryDropDown() {
     }
 
     // Create a GeoJSON layer for the selected country
-    selectedCountryLayer = L.geoJSON(filteredCountry).addTo(map);
+    selectedCountryLayer = L.geoJSON(filteredCountry, {
+      style: {
+        color: "#15D21F", // Blue color for other countries (or any default styling you want)
+        weight: 2,
+      },
+    }).addTo(map);
 
     // Zoom out to the bounds of the selected country
     map.fitBounds(selectedCountryLayer.getBounds());
@@ -218,6 +174,8 @@ function selectCountryDropDown() {
     getWikiCountry(filteredCountry.properties.name);
     getCurrencyCode(selectedCountry);
     getNewsData(selectedCountry);
+    getWeatherData();
+    // getWeatherData();
     function getCurrencyCode(country) {
       fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
         countryCurrencyCode = result["data"][0]["currencyCode"];
@@ -230,16 +188,35 @@ function selectCountryDropDown() {
 //  ############### Get Country Info #################
 function getCountryInfo(country) {
   fetchData("libs/php/getCountryInfo.php", { country }).then((result) => {
+    let stringToNumber = Number(result["data"][0]["population"]);
+    let number = numeral(stringToNumber).format("0,0");
+
     $("#displayCountryName").html(result["data"][0]["countryName"]);
     $("#displayLang").html(result["data"][0]["languages"]);
     $("#displayCapital").html(result["data"][0]["capital"]);
     $("#displayContinet").html(result["data"][0]["continentName"]);
-    $("#displayPopulation").html(result["data"][0]["population"]);
+    $("#displayPopulation").html(number);
   });
 }
 
 // ############################### Creating Airport Markers #############################################
-let airportMarkerCluster = L.markerClusterGroup();
+let airportMarkerCluster = L.markerClusterGroup({
+  polygonOptions: {
+    fillColor: "#add3db",
+    color: "#02a2e9",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5,
+  },
+});
+
+// var airportIcon = L.ExtraMarkers.icon({
+//   prefix: "fa",
+//   icon: "fa-plane",
+//   iconColor: "black",
+//   markerColor: "white",
+//   shape: "square"
+// });
 function placeAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
   airportMarkerCluster.clearLayers();
@@ -250,12 +227,12 @@ function placeAirportMarkers(country) {
   }).then((result) => {
     $.each(result.data, function (index, airport) {
       const airportName = airport["asciiName"];
-      const airportLat = airport["lat"];
-      const airportLng = airport["lng"];
+      const airportLat = parseFloat(airport["lat"]);
+      const airportLng = parseFloat(airport["lng"]);
 
-      const airportMarker = L.marker([parseFloat(airportLat), parseFloat(airportLng)], {
+      const airportMarker = L.marker([airportLat, airportLng], {
         icon: renderMarkerIcon("img/airportIcon.png", [50, 50], [20, 0], [4, 3]),
-      }).bindPopup(airportName);
+      }).bindTooltip(airportName, { direction: "top", sticky: true });
       airportMarkerCluster.addLayer(airportMarker);
     });
     map.addLayer(airportMarkerCluster);
@@ -263,7 +240,16 @@ function placeAirportMarkers(country) {
 }
 
 // ############################### Creating National Park Markers #############################################
-let nationalMarkerCluster = L.markerClusterGroup();
+let nationalMarkerCluster = L.markerClusterGroup({
+  polygonOptions: {
+    fillColor: "	#50C878",
+    color: "#097969",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5,
+  },
+});
+
 // updates the airport marker
 function placeNationalMarkers(selectedCountry) {
   // Clear existing airport markers on the map
@@ -332,140 +318,96 @@ function populateCurrencyCodeDropdown(countryCurrencyCode) {
 // ################ Converting Currency And Fetching Rates Data ###########################
 function ConvertingCurrencyRates() {
   fetchData("libs/php/getRates.php").then((result) => {
-    $("#convertAmount").on("click", () => {
-      const fromCurrency = $("#fromCurrency").val();
-      const toCurrency = $("#toCurrency").val();
-      const amount = parseFloat($("#inputAmount").val());
-      const displayConvertedAmount = $("#displayConvertedAmount");
+    const fromCurrency = $("#fromCurrency").val();
+    const toCurrency = $("#toCurrency").val();
+    const amount = parseFloat($("#inputAmount").val());
+    const displayConvertedAmount = $("#displayConvertedAmount");
 
-      if (result.rates[fromCurrency] && result.rates[toCurrency]) {
-        const calculateExchangeRate = result.rates[fromCurrency] / result.rates[toCurrency];
-        const convertedAmount = amount / calculateExchangeRate;
-        displayConvertedAmount.text(
-          `${amount} in ${fromCurrency} = ${convertedAmount.toFixed(3)} in ${toCurrency}`
-        );
-      } else {
-        displayConvertedAmount.text(
-          `Exchange rates not found for ${fromCurrency} and ${toCurrency}.`
-        );
-      }
-    });
+    if (result.rates[fromCurrency] && result.rates[toCurrency]) {
+      const calculateExchangeRate = result.rates[fromCurrency] / result.rates[toCurrency];
+      const convertedAmount = amount / calculateExchangeRate;
+
+      displayConvertedAmount.text(
+        `${amount} in ${fromCurrency} = ${numeral(convertedAmount).format(
+          "0,0.00"
+        )} in ${toCurrency}`
+      );
+    } else {
+      displayConvertedAmount.text("Enter amount ot calculate");
+    }
   });
 }
-// ########## Click Convert Button To Call Function ConvertingCurrencyRates() #############################
-let convertButton = document.getElementById("convertAmount");
+
+// ########## To Call Function ConvertingCurrencyRates() #############################
 // Add a click event listener to the button
-convertButton.addEventListener("click", function () {
+$("#inputAmount, #fromCurrency, #toCurrency").on("change keyup", function () {
   ConvertingCurrencyRates();
 });
-
-// ########################## Populate Current Weather Dropdown Of the Selected Country ###########################
-let cityName;
-const cityWeatherDropdown = document.getElementById("cityWeatherDropdown"); // Replace with the actual element ID
-const cityDropdownForecast = document.getElementById("cityDropdownForecast"); // Replace with the actual element ID
-
-function populateCityWeatherDropdown(cityDropdown) {
-  fetchData("libs/php/getCountryPlaceLatLng.php", {
-    country: $("#countrySelect").val(),
-  }).then((result) => {
-    const sortedPlaceData = result.data.sort((a, b) => a.toponymName.localeCompare(b.toponymName)); // Sort by place name
-    cityDropdown.innerHTML = "";
-    sortedPlaceData.forEach((place) => {
-      placeName = place["toponymName"];
-      placeLat = place["lat"];
-      placeLng = place["lng"];
-
-      const option = document.createElement("option");
-      option.value = `${placeLat},${placeLng}`; // Set the value to lat,lng
-      option.text = placeName; // Display the city name as the text
-
-      cityDropdown.appendChild(option);
-    });
-
-    cityDropdown.addEventListener("change", function () {
-      // //  the selected index retrievs the option element
-      const selectedOption = this.options[this.selectedIndex];
-      cityName = selectedOption.text.replace(" ", "%20");
-
-      if (cityDropdown === cityWeatherDropdown) {
-        getWeatherData();
-      }
-      if (cityDropdown === cityDropdownForecast) {
-        getForecastData();
-      }
-    });
-  });
-}
 
 // ########## Convert kelvin value to celsius ##########
 function kelvinToCelsius(kelvin) {
   let celsius = kelvin - 273.15;
-  celsius = celsius.toFixed(2);
+  celsius = Math.round(celsius);
   return `${celsius}°C`;
 }
-// ###################### Fetching Current Weather Data and Rendering #################
+
+function dateInUk(dateTimeString) {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const date = new Date(dateTimeString);
+  const dayName = days[date.getDay()];
+
+  const dateParts = dateTimeString.split(" ")[0].split("-");
+  return `${dayName} ${dateParts[2]}`;
+}
+
+// ###################### Fetching Current/forecast Weather Data and Rendering #################
 function getWeatherData() {
-  fetchData("libs/php/getWeatherData.php", {
-    cityName,
-    countryCode,
+  fetchData("libs/php/getCountryInfo.php", {
+    country: $("#countrySelect").val(),
   }).then((result) => {
-    const weatherIcon = result.data.weather[0].icon;
-    document.getElementById(
-      "weatherIcon"
-    ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
-    $("#displayWeatherText").html(result.data.weather[0].description);
-    $("#displayHumidity").html(result.data.main.humidity);
-    $("#displayTemperature").html(kelvinToCelsius(result.data.main.temp));
-    $("#displayFeelsLike").html(kelvinToCelsius(result.data.main.feels_like));
-    $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
-  });
-}
+    let cityName = result.data[0].capital;
+    let countryName = $("#countrySelect option:selected").text();
 
-// ###################### Rendering Forest Data For The Next 5 Days #################
-function populateForecastField(forecastList) {
-  for (let i = 0; i < forecastList.length; i++) {
-    const $tdElementDays = $(`#displayDay${i + 1}`);
-    const $tdElementIcon = $(`#D${i + 1}displayStatusIcon`);
-    const $tdElementHumidity = $(`#D${i + 1}displayHumidity`);
-    const $tdElementTemperature = $(`#D${i + 1}displayTemperature`);
-    const $tdElementWindSpeed = $(`#D${i + 1}displayWindSpeed`);
+    fetchData("libs/php/getWeatherData.php", {
+      cityName,
+      countryCode,
+    }).then((result) => {
+      $("#weatherModalLabel").html(cityName + ", " + countryName);
 
-    // converting string base date time to days e.g. 2023-10-25 12:00:00 => wed
-    const date = new Date(forecastList[i].date);
-    const dayOfWeek = date.toLocaleDateString("en-US", {
-      weekday: "short",
+      const weatherIcon = result.data.weather[0].icon;
+      document.getElementById(
+        "todayIcon"
+      ).src = `https://openweathermap.org/img/wn/${weatherIcon}@2x.png`;
+      $("#todayConditions").html(result.data.weather[0].description);
+      $("#todayMaxTemp").html(kelvinToCelsius(result.data.main.temp_max));
+      $("#todayMinTemp").html(kelvinToCelsius(result.data.main.temp_min));
+      $("#displayWindSpeed").html(`${result.data.wind.speed} mph`);
     });
 
-    $tdElementDays.text(dayOfWeek);
-    $tdElementIcon.attr("src", `https://openweathermap.org/img/wn/${forecastList[i].icon}@2x.png`);
-    $tdElementHumidity.text(forecastList[i].humidity);
-    $tdElementTemperature.text(kelvinToCelsius(forecastList[i].temperature));
-    $tdElementWindSpeed.text(`${forecastList[i].windSpeed} mph`);
-  }
-}
+    fetchData("libs/php/getForecastData.php", {
+      cityName,
+      countryCode,
+    }).then((result) => {
+      // this gets the list of data for 5 days at midday(12:00:00)
+      const forecastItems = result.data.list
+        .filter((item) => item.dt_txt.includes("12:00:00"))
+        .slice(0, 2);
 
-// ################# Fetching Forecast Data #####################
-let forecastList = [];
-function getForecastData() {
-  fetchData("libs/php/getForecastData.php", {
-    cityName,
-    countryCode,
-  }).then((result) => {
-    // this gets the list of data for 5 days at midday(12:00:00)
-    const forecastItems = result.data.list.filter((item) => item.dt_txt.includes("12:00:00"));
+      $("#day1Date").text(dateInUk(forecastItems[0].dt_txt));
+      document.getElementById(
+        "day1Icon"
+      ).src = `https://openweathermap.org/img/wn/${forecastItems[0].weather[0].icon}@2x.png`;
+      $("#day1MaxTemp").text(kelvinToCelsius(forecastItems[0].main.temp_max));
+      $("#day1MinTemp").text(kelvinToCelsius(forecastItems[0].main.temp_min));
 
-    forecastItems.forEach((forecast) => {
-      forecastList.push({
-        date: forecast.dt_txt,
-        icon: forecast.weather[0].icon,
-        humidity: forecast.main.humidity,
-        temperature: forecast.main.temp,
-        windSpeed: forecast.wind.speed,
-      });
+      $("#day2Date").text(dateInUk(forecastItems[1].dt_txt));
+      document.getElementById(
+        "day2Icon"
+      ).src = `https://openweathermap.org/img/wn/${forecastItems[1].weather[0].icon}@2x.png`;
+      $("#day2MaxTemp").text(kelvinToCelsius(forecastItems[1].main.temp_max));
+      $("#day2MinTemp").text(kelvinToCelsius(forecastItems[1].main.temp_min));
     });
-
-    populateForecastField(forecastList);
-    forecastList.length = 0;
   });
 }
 
@@ -473,42 +415,60 @@ function getForecastData() {
 let newsArticles = [];
 function getNewsData() {
   fetchData("libs/php/getNewsData.php", { countryCode }).then((result) => {
-    result.data.articles.forEach(function (article, index) {
-      const { title, publishedAt, url } = article;
+    if (result.data && result.data.results && result.data.results.length > 0) {
+      result.data.results.forEach((article) => {
+        const { title, image_url, pubDate, source_id, link } = article;
 
-      newsArticles.push({
-        num: index + 1,
-        title,
-        publishedAt,
-        source: article.source.name,
-        url,
+        newsArticles.push({
+          title,
+          image_url,
+          pubDate,
+          source_id,
+          link,
+        });
       });
-    });
-    displayArticle(newsArticles);
-    newsArticles.length = 0;
+
+      displayArticle(newsArticles);
+      newsArticles.length = 0;
+    } else {
+      const $newsContainer = $("#newsContainer");
+      $newsContainer.empty();
+      $newsContainer.append("<p>No news articles found for the specified country.</p>");
+    }
   });
 }
 // ################# Rendering News Data As Article On Modal #######################
-function displayArticle(articles) {
-  for (let i = 0; i < articles.length; i++) {
-    const article = articles[i];
-    const index = i + 1;
+let altMessage;
+function displayArticle(newsList) {
+  const $newsContainer = $("#newsContainer"); // Using jQuery to select the newsContainer
+  $newsContainer.empty();
 
-    // Use template literals to generate element IDs
-    const displayNewsNum = document.getElementById(`displayNewsNum${index}`);
-    const displayNewsTitle = document.getElementById(`displayNewsTitle${index}`);
-    const displayNewsPublishedAt = document.getElementById(`displayNewsPublishedAt${index}`);
-    const displayNewsSource = document.getElementById(`displayNewsSource${index}`);
-    const displayNewsUrl = document.getElementById(`displayNewsUrl${index}`);
+  newsList.forEach((news) => {
+    if (news.image_url === null) {
+      news.image_url = "";
+      altMessage = "Image unavailable";
+    }
+    const newsTemplate = `
+      <table class="table table-borderless"> 
+        <tr>
+          <td rowspan="2" width="50%">
+            <img class="img-fluid rounded" src="${news.image_url}" alt="${altMessage}" title="">
+          </td>
+          <td>
+            <a href="${news.link}" class="fw-bold fs-6 text-black" target="_blank">${news.title}</a>
+          </td>
+        </tr>
+        <tr>        
+          <td class="align-bottom pb-0">
+            <p class="fw-light fs-6 mb-1">${news.source_id}</p>
+          </td>            
+        </tr>
+      </table>
+      <hr>
+    `;
 
-    // Set the content for each element
-    displayNewsNum.textContent = `Article: ${article.num}`;
-    displayNewsTitle.textContent = `Title: ${article.title}`;
-    displayNewsPublishedAt.textContent = `Published: ${article.publishedAt}`;
-    displayNewsSource.textContent = `Source: ${article.source}`;
-    displayNewsUrl.textContent = `Link: ${article.url.slice(0, 27)}`;
-    displayNewsUrl.href = article.url;
-  }
+    $newsContainer.append(newsTemplate); // Using jQuery's append method
+  });
 }
 
 // ############## Fetching Wiki data Through PHP Routine calls #####################
@@ -546,11 +506,10 @@ function displayWikiInfo(wikiInfos) {
 window.onload = function () {
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
-    populateCityWeatherDropdown(cityWeatherDropdown);
-    populateCityWeatherDropdown(cityDropdownForecast);
+    // TestingBorder();
   });
+
   populateCountryDropdown();
   getUserPosition();
-
   ConvertingCurrencyRates();
 };

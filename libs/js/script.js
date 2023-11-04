@@ -415,21 +415,26 @@ function getWeatherData() {
 let newsArticles = [];
 function getNewsData() {
   fetchData("libs/php/getNewsData.php", { countryCode }).then((result) => {
-    console.log(result.data.results);
-    result.data.results.forEach(function (article) {
-      const { title, image_url, pubDate, source_id, link } = article;
+    if (result.data && result.data.results && result.data.results.length > 0) {
+      result.data.results.forEach((article) => {
+        const { title, image_url, pubDate, source_id, link } = article;
 
-      newsArticles.push({
-        title,
-        image_url,
-        pubDate,
-        source_id,
-        link,
+        newsArticles.push({
+          title,
+          image_url,
+          pubDate,
+          source_id,
+          link,
+        });
       });
-    });
 
-    displayArticle(newsArticles);
-    newsArticles.length = 0;
+      displayArticle(newsArticles);
+      newsArticles.length = 0;
+    } else {
+      const $newsContainer = $("#newsContainer");
+      $newsContainer.empty();
+      $newsContainer.append("<p>No news articles found for the specified country.</p>");
+    }
   });
 }
 // ################# Rendering News Data As Article On Modal #######################

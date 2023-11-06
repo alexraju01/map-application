@@ -210,13 +210,14 @@ let airportMarkerCluster = L.markerClusterGroup({
   },
 });
 
-// var airportIcon = L.ExtraMarkers.icon({
-//   prefix: "fa",
-//   icon: "fa-plane",
-//   iconColor: "black",
-//   markerColor: "white",
-//   shape: "square"
-// });
+let airportIcon = L.ExtraMarkers.icon({
+  prefix: "fa",
+  icon: "fa-plane",
+  iconColor: "blue",
+  markerColor: "white",
+  shape: "square",
+});
+
 function placeAirportMarkers(country) {
   // Clear existing airport markers on the map, if there is any
   airportMarkerCluster.clearLayers();
@@ -231,7 +232,7 @@ function placeAirportMarkers(country) {
       const airportLng = parseFloat(airport["lng"]);
 
       const airportMarker = L.marker([airportLat, airportLng], {
-        icon: renderMarkerIcon("img/airportIcon.png", [50, 50], [20, 0], [4, 3]),
+        icon: airportIcon,
       }).bindTooltip(airportName, { direction: "top", sticky: true });
       airportMarkerCluster.addLayer(airportMarker);
     });
@@ -250,6 +251,14 @@ let nationalMarkerCluster = L.markerClusterGroup({
   },
 });
 
+let nationalParkIcon = L.ExtraMarkers.icon({
+  prefix: "fa",
+  icon: "fa-tree",
+  iconColor: "green",
+  markerColor: "white",
+  shape: "square",
+});
+
 // updates the airport marker
 function placeNationalMarkers(selectedCountry) {
   // Clear existing airport markers on the map
@@ -265,7 +274,7 @@ function placeNationalMarkers(selectedCountry) {
       const nationalLng = national["lng"];
 
       const nationalParkMarker = L.marker([parseFloat(nationalLat), parseFloat(nationalLng)], {
-        icon: renderMarkerIcon("img/nationalIcon.png", [60, 60], [25], [4, 3]),
+        icon: nationalParkIcon,
       }).bindPopup(nationalName);
       nationalMarkerCluster.addLayers(nationalParkMarker);
     });

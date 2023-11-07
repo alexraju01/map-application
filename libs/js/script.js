@@ -213,7 +213,7 @@ let airportMarkerCluster = L.markerClusterGroup({
 let airportIcon = L.ExtraMarkers.icon({
   prefix: "fa",
   icon: "fa-plane",
-  iconColor: "blue",
+  iconColor: "#02a2e9",
   markerColor: "white",
   shape: "square",
 });
@@ -254,7 +254,7 @@ let nationalMarkerCluster = L.markerClusterGroup({
 let nationalParkIcon = L.ExtraMarkers.icon({
   prefix: "fa",
   icon: "fa-tree",
-  iconColor: "green",
+  iconColor: "#097969",
   markerColor: "white",
   shape: "square",
 });
@@ -453,6 +453,7 @@ function displayArticle(newsList) {
   $newsContainer.empty();
 
   newsList.forEach((news) => {
+    console.log();
     if (news.image_url === null) {
       news.image_url = "";
       altMessage = "Image unavailable";

@@ -514,6 +514,7 @@ function displayWikiInfo(wikiInfos) {
 }
 
 window.onload = function () {
+  // Your existing page initialization functions
   document.getElementById("countrySelect").addEventListener("change", function () {
     selectCountryDropDown();
     // TestingBorder();
@@ -522,4 +523,19 @@ window.onload = function () {
   populateCountryDropdown();
   getUserPosition();
   ConvertingCurrencyRates();
+
+  // Preloader removal logic
+  var preloader = document.getElementById("preloader");
+
+  // Check if the preloader exists
+  if (preloader) {
+    // Apply a fade-out transition
+    preloader.style.opacity = 0;
+    preloader.style.transition = "opacity 0.5s ease";
+
+    // Once the fade-out is done, set display to 'none'
+    setTimeout(function () {
+      preloader.style.display = "none";
+    }, 500); // this should match the opacity transition duration
+  }
 };
